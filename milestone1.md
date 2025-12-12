@@ -1,4 +1,4 @@
-# Milestone 1 Report - Smart Parking System
+# Milestone 1 Report - ParkEase
 **Infosys Springboard Internship - Java Tech Domain**
 
 ---
@@ -7,13 +7,13 @@
 
 This is my first milestone report out of four for the Infosys Springboard internship. Even though my domain is Java Tech, this milestone focused on learning web development fundamentals using Node.js and JavaScript. I understand we'll be moving to Java in later milestones, but starting with these basics helped me understand how web applications work.
 
-For this milestone, I built a basic Smart Parking System to practice the concepts they taught us.
+For this milestone, I built "ParkEase", a Smart Parking System to practice the concepts they taught us.
 
 ---
 
 ## Project Overview
 
-I created a simple web application for managing parking spaces. It's not a complete project - just a learning exercise to understand backend and frontend development basics.
+I created a modern web application for managing parking spaces. It's not a complete project - just a learning exercise to understand backend and frontend development basics.
 
 **What it does:**
 - Users can register and login
@@ -49,7 +49,7 @@ I chose this idea because finding parking is a common problem, and it gave me a 
 
 **HTML/CSS/JavaScript**: I built the user interface with basic web technologies:
 - Created forms for login and registration
-- Styled pages with CSS (used a purple gradient theme)
+- Styled pages with CSS (used a modern blue/green parking theme)
 - Used JavaScript to connect with my backend APIs
 - Learned about async/await for API calls
 
@@ -81,7 +81,7 @@ I chose this idea because finding parking is a common problem, and it gave me a 
 - User dashboard (shows parking slots and vehicle info)
 - Admin dashboard (shows all users and statistics)
 
-The design is simple - I used white cards on a purple gradient background with basic styling.
+The design is simple but professional - I used glassmorphism effects and appropriate parking colors (blue/green) with a clean layout.
 
 ---
 

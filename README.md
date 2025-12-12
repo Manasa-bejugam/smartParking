@@ -1,4 +1,4 @@
-# Smart Parking System
+# ParkEase: Smart Parking System
 
 A full-stack web application for managing parking spaces with user authentication and role-based access control.
 
