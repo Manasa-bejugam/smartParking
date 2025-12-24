@@ -6,14 +6,14 @@ const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token} ` })
+        ...(token && { Authorization: `Bearer ${token}` })
     };
 };
 
 // Fetch all slots
 export const fetchSlots = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL} /slots/all`, {
+        const response = await fetch(`${API_BASE_URL}/slots/all`, {
             headers: getAuthHeaders()
         });
 
