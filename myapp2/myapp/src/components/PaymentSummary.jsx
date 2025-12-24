@@ -21,7 +21,7 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
             setLoading(true);
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'http://localhost:5000/api/payments/calculate',
+                'https://smart-parking-backend-z9ww.onrender.com/api/payments/calculate',
                 {
                     method: 'POST',
                     headers: {
@@ -74,7 +74,7 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
 
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'http://localhost:5000/api/payments/process',
+                'https://smart-parking-backend-z9ww.onrender.com/api/payments/process',
                 {
                     method: 'POST',
                     headers: {

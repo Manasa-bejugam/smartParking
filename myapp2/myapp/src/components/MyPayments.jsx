@@ -15,7 +15,7 @@ const MyPayments = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/bookings/my-bookings', {
+            const response = await fetch('https://smart-parking-backend-z9ww.onrender.com/api/bookings/my-bookings', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -45,7 +45,7 @@ const MyPayments = () => {
             const token = localStorage.getItem('token');
             const payment = calculatePayment(selectedBooking);
 
-            const response = await fetch('http://localhost:5000/api/payments/process', {
+            const response = await fetch('https://smart-parking-backend-z9ww.onrender.com/api/payments/process', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
