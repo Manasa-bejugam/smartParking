@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
+import { fetchWithRetry } from '../utils/apiRetry';
 import './Register.css';
 
 const Register = ({ onSwitchToLogin }) => {
@@ -18,6 +19,7 @@ const Register = ({ onSwitchToLogin }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const { login } = useAuth();
 
     const handleChange = (e) => {
@@ -32,15 +34,17 @@ const Register = ({ onSwitchToLogin }) => {
         setError('');
         setSuccess('');
         setLoading(true);
+        setLoadingMessage('Connecting to server...');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            // Use retry wrapper for better cold start handling
+            const response = await fetchWithRetry(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
-            });
+            }, 3, 5000); // 3 retries, 5 second delay
 
             const data = await response.json();
 
@@ -178,7 +182,14 @@ const Register = ({ onSwitchToLogin }) => {
                         />
                     </div>
 
+                    {loading && loadingMessage && (
+                        <div className="info-message">
+                            <div className="spinner"></div>
+                            {loadingMessage}
+                        </div>
+                    )}
                     {error && <div className="error-message">⚠️ {error}</div>}
+
                     {success && <div className="success-message">✅ {success}</div>}
 
                     <button type="submit" className="auth-button" disabled={loading}>

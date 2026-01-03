@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
+import { fetchWithRetry } from '../utils/apiRetry';
 import './Login.css';
 
 const Login = ({ onSwitchToRegister }) => {
@@ -10,21 +11,23 @@ const Login = ({ onSwitchToRegister }) => {
     const [role, setRole] = useState('user'); // Default to user
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
+        setLoadingMessage('Connecting to server...');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            const response = await fetchWithRetry(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ identifier, password, adminSecret }),
-            });
+            }, 3, 5000); // 3 retries, 5 second delay
 
             const data = await response.json();
 
@@ -107,7 +110,14 @@ const Login = ({ onSwitchToRegister }) => {
                         </div>
                     )}
 
+                    {loading && loadingMessage && (
+                        <div className="info-message">
+                            <div className="spinner"></div>
+                            {loadingMessage}
+                        </div>
+                    )}
                     {error && <div className="error-message">⚠️ {error}</div>}
+
 
                     <button type="submit" className="auth-button" disabled={loading}>
                         {loading ? 'Logging in...' : 'Login'}
