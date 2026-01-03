@@ -1,16 +1,22 @@
 // Auto-retry wrapper for API calls to handle backend cold starts
-export const fetchWithRetry = async (url, options = {}, maxRetries = 3, retryDelay = 3000) => {
+export const fetchWithRetry = async (url, options = {}, maxRetries = 5, retryDelay = 8000) => {
     let lastError;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout per attempt
+
             const response = await fetch(url, {
                 ...options,
+                signal: controller.signal,
                 headers: {
                     'Content-Type': 'application/json',
                     ...options.headers,
                 },
             });
+
+            clearTimeout(timeoutId);
 
             // If response is ok, return it
             if (response.ok) {
@@ -35,7 +41,7 @@ export const fetchWithRetry = async (url, options = {}, maxRetries = 3, retryDel
 
             // Wait before retrying (exponential backoff)
             const waitTime = retryDelay * attempt;
-            console.log(`Attempt ${attempt} failed. Retrying in ${waitTime}ms...`);
+            console.log(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${waitTime / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
         }
     }
