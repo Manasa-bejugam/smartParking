@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 import './Register.css';
 
 const Register = ({ onSwitchToLogin }) => {
@@ -33,7 +34,7 @@ const Register = ({ onSwitchToLogin }) => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

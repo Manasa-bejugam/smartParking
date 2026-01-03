@@ -13,6 +13,7 @@ import MyPayments from "./components/MyPayments";
 import LocationFilter from "./components/LocationFilter";
 import { fetchSlots, getMyBookings } from "./api";
 import { useSocket } from "./hooks/useSocket";
+import { API_BASE_URL } from "./config";
 import "./App.css";
 import "./styles/profile.css";
 import "./styles/edit-profile.css";
@@ -130,7 +131,7 @@ const ProfileContent = ({ user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+      const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
