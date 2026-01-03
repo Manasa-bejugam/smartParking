@@ -14,6 +14,7 @@ import LocationFilter from "./components/LocationFilter";
 import { fetchSlots, getMyBookings } from "./api";
 import { useSocket } from "./hooks/useSocket";
 import { API_BASE_URL } from "./config";
+import AvailableSlotsGrid from "./components/AvailableSlotsGrid";
 import "./App.css";
 import "./styles/profile.css";
 import "./styles/edit-profile.css";
@@ -488,7 +489,7 @@ const UserDashboard = () => {
 
   const handleSelectSlot = (slot) => {
     setSelectedSlot(slot);
-    setActiveTab('slots'); // Switch to slots tab when selecting from map
+    setActiveTab('book'); // Switch to book tab when selecting from map
   };
 
   const handleBookingSuccess = () => {
@@ -540,53 +541,51 @@ const UserDashboard = () => {
       {/* Main content - Tab based */}
       {!loading && !error && (
         <>
-          {/* FIND PARKING (Unified Map + Side Panel) */}
-          {(activeTab === 'map' || activeTab === 'slots') && (
+          {/* MAP TAB */}
+          {activeTab === 'map' && (
             <div className="dashboard-split-view">
-              {/* Left Side: Live Map */}
               <div className="map-section">
                 <ParkingMap
                   slots={slots}
                   onSelectSlot={handleSelectSlot}
                 />
               </div>
-
-              {/* Right Side: Details Panel */}
               <div className="side-panel">
-                {/* Location Filter */}
-                {allSlots.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <LocationFilter
-                      slots={allSlots}
-                      selectedLocation={selectedLocation}
-                      onLocationChange={handleLocationChange}
-                    />
-                  </div>
-                )}
+                <AvailableSlotsGrid slots={allSlots} />
+              </div>
+            </div>
+          )}
 
-                {selectedSlot ? (
-                  <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          {/* BOOK TAB */}
+          {activeTab === 'book' && (
+            <div className="tab-content">
+              <div className="booking-container-layout">
+                <div className="filter-section">
+                  <LocationFilter
+                    slots={allSlots}
+                    selectedLocation={selectedLocation}
+                    onLocationChange={handleLocationChange}
+                  />
+                </div>
+
+                <div className="booking-form-section">
+                  {selectedSlot ? (
+                    <div className="booking-form-wrapper">
                       <h3>🅿️ Booking Slot {selectedSlot.slotNumber}</h3>
-                      <button
-                        onClick={() => setSelectedSlot(null)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                      >✕</button>
+                      <BookingForm
+                        slots={slots}
+                        selectedSlot={selectedSlot}
+                        onBookingSuccess={handleBookingSuccess}
+                      />
                     </div>
-                    <BookingForm
-                      slots={slots}
-                      selectedSlot={selectedSlot}
-                      onBookingSuccess={handleBookingSuccess}
-                    />
-                  </>
-                ) : (
-                  <div style={{ textAlign: 'center', marginTop: '10px', color: '#64748b' }}>
-                    <h3>👈 Select a Parking Spot</h3>
-                    <p>Click on any green marker on the map to view details and book it.</p>
-                    <p>Or browse the list below:</p>
-                    <SlotList slots={slots} onSelect={handleSelectSlot} />
-                  </div>
-                )}
+                  ) : (
+                    <div className="no-slot-selected">
+                      <h3>👈 Select a Parking Spot</h3>
+                      <p>Pick a location above and select a slot from the list below:</p>
+                      <SlotList slots={slots} onSelect={handleSelectSlot} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

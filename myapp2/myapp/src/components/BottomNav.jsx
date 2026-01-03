@@ -5,6 +5,7 @@ import './BottomNav.css';
 const BottomNav = ({ activeTab, onTabChange }) => {
     const navItems = [
         { id: 'map', icon: '🗺️', label: 'Map' },
+        { id: 'book', icon: '✨', label: 'Book' },
         { id: 'bookings', icon: '📋', label: 'Bookings' },
         { id: 'payments', icon: '💳', label: 'Payments' },
         { id: 'profile', icon: '👤', label: 'Profile' }

@@ -1,3 +1,4 @@
 // Backend API configuration
-export const BACKEND_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Temporarily hardcoded for testing - will use env var after verification
+export const BACKEND_URL = 'https://smart-parking-backend-z9ww.onrender.com';
 export const API_BASE_URL = `${BACKEND_URL}/api`;

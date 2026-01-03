@@ -283,3 +283,43 @@
     padding: var(--space-4);
   }
 }
+
+/* Dashboard Layout Restructure */
+.booking-container-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (min-width: 1024px) {
+  .booking-container-layout {
+    grid-template-columns: 380px 1fr;
+    align-items: start;
+  }
+}
+
+.booking-form-wrapper {
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.no-slot-selected {
+  text-align: center;
+  padding: 60px 40px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.filter-section {
+  position: sticky;
+  top: 20px;
+}
