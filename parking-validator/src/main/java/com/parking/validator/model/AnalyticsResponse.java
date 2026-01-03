@@ -10,6 +10,7 @@ public class AnalyticsResponse {
     private double averageDuration;
     private String peakHour;
     private Map<String, Integer> slotUsage;
+    private Map<String, Integer> sectionUsage;
 
     // Constructors
     public AnalyticsResponse() {
@@ -70,5 +71,13 @@ public class AnalyticsResponse {
 
     public void setSlotUsage(Map<String, Integer> slotUsage) {
         this.slotUsage = slotUsage;
+    }
+
+    public Map<String, Integer> getSectionUsage() {
+        return sectionUsage;
+    }
+
+    public void setSectionUsage(Map<String, Integer> sectionUsage) {
+        this.sectionUsage = sectionUsage;
     }
 }

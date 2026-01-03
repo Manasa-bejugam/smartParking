@@ -1,3 +1,33 @@
+/* Role Selector Styles */
+.role-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.role-option {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+}
+
+.role-option:hover {
+    background: #e2e8f0;
+}
+
+.role-option.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 .auth-container {
     min-height: 100vh;
     display: flex;

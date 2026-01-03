@@ -10,7 +10,9 @@ const Register = ({ onSwitchToLogin }) => {
         vehicleNumber: '',
         vehicleType: '',
         phone: '',
-        role: 'user'
+        phone: '',
+        role: 'user',
+        adminSecret: ''
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -31,7 +33,7 @@ const Register = ({ onSwitchToLogin }) => {
         setLoading(true);
 
         try {
-            const response = await fetch('https://smart-parking-backend-z9ww.onrender.com/api/auth/register', {
+            const response = await fetch('http://localhost:5000/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -66,6 +68,35 @@ const Register = ({ onSwitchToLogin }) => {
                 <p className="auth-subtitle">Register for smart parking</p>
 
                 <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="role-selector">
+                        <div
+                            className={`role-option ${formData.role === 'user' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'user' })}
+                        >
+                            👤 User
+                        </div>
+                        <div
+                            className={`role-option ${formData.role === 'admin' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'admin' })}
+                        >
+                            🛡️ Admin
+                        </div>
+                    </div>
+
+                    {formData.role === 'admin' && (
+                        <div className="input-group">
+                            <label>Admin Invite Token</label>
+                            <input
+                                type="password"
+                                name="adminSecret"
+                                placeholder="Paste your invite token here"
+                                value={formData.adminSecret}
+                                onChange={handleChange}
+                                required
+                                className="auth-input secret-input"
+                            />
+                        </div>
+                    )}
                     <div className="input-group">
                         <label>Full Name</label>
                         <input
@@ -114,7 +145,6 @@ const Register = ({ onSwitchToLogin }) => {
                             placeholder="e.g., ABC1234"
                             value={formData.vehicleNumber}
                             onChange={handleChange}
-                            required
                             className="auth-input"
                         />
                     </div>
@@ -125,7 +155,6 @@ const Register = ({ onSwitchToLogin }) => {
                             name="vehicleType"
                             value={formData.vehicleType}
                             onChange={handleChange}
-                            required
                             className="auth-input"
                         >
                             <option value="">Select vehicle type</option>
@@ -144,7 +173,6 @@ const Register = ({ onSwitchToLogin }) => {
                             placeholder="Enter phone number"
                             value={formData.phone}
                             onChange={handleChange}
-                            required
                             className="auth-input"
                         />
                     </div>

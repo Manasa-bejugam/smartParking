@@ -5,29 +5,47 @@ const User = require("../models/user");
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
-const JWT_SECRET = process.env.JWT_SECRET || "secret123"; // use env in production
-
-// Helper: normalize email
-function normalizeEmail(email) {
-  return typeof email === "string" ? email.trim().toLowerCase() : email;
-}
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "SmartParkingAdmin2024";
+const JWT_SECRET = process.env.JWT_SECRET || "smartparking_jwt_secret";
 
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, vehicleNumber, vehicleType, phone, role } =
+    const { name, email, password, vehicleNumber, vehicleType, phone, role, adminSecret } =
       req.body;
+
+    // Validate Admin Invite Token
+    if (role === 'admin') {
+      if (!adminSecret) {
+        return res.status(403).json({ message: "Admin Invite Token is required." });
+      }
+      try {
+        const decoded = jwt.verify(adminSecret, JWT_SECRET);
+        if (decoded.role !== 'admin_invite') {
+          throw new Error("Invalid token scope");
+        }
+      } catch (err) {
+        return res.status(403).json({ message: "Invalid or Expired Admin Invite Token." });
+      }
+    }
+
+    // Role-based validation
+    const effectiveRole = role || 'user';
+    if (effectiveRole === 'user') {
+      if (!vehicleNumber) return res.status(400).json({ message: "Vehicle Number is required for Users." });
+      if (!phone) return res.status(400).json({ message: "Phone Number is required for Users." });
+    }
 
     const normalizedEmail = normalizeEmail(email);
     const normalizedVehicle = vehicleNumber ? vehicleNumber.trim().toUpperCase() : vehicleNumber;
 
     // check if user already exists
-    const existingUser = await User.findOne({
-      $or: [
-        { email: normalizedEmail },
-        { vehicleNumber: normalizedVehicle }
-      ]
-    });
+    const query = [{ email: normalizedEmail }];
+    if (normalizedVehicle) {
+      query.push({ vehicleNumber: normalizedVehicle });
+    }
+
+    const existingUser = await User.findOne({ $or: query });
 
     if (existingUser) {
       const field = existingUser.email === normalizedEmail ? "Email" : "Vehicle Number";
@@ -45,6 +63,7 @@ router.post("/register", async (req, res) => {
       vehicleType,
       phone,
       role: role || 'user', // Default to 'user' if not specified
+      expiresAt: role === 'admin' ? Date.now() + 24 * 60 * 60 * 1000 : null // 24 hours for admin
     });
 
     await user.save();
@@ -98,6 +117,27 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
+    // Check account expiration for Admin
+    if (user.role === 'admin') {
+      if (user.expiresAt && user.expiresAt < Date.now()) {
+        return res.status(403).json({ message: "Admin access expired. Please contact support or re-register." });
+      }
+
+      // Verify Invite Token for Login
+      const { adminSecret } = req.body;
+      if (!adminSecret) {
+        return res.status(403).json({ message: "Admin Token is required for login." });
+      }
+      try {
+        const decoded = jwt.verify(adminSecret, JWT_SECRET);
+        if (decoded.role !== 'admin_invite') {
+          throw new Error("Invalid token scope");
+        }
+      } catch (err) {
+        return res.status(403).json({ message: "Invalid or Expired Admin Token." });
+      }
+    }
+
     // Create JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
       expiresIn: "24h", // Increased to 24h for convenience
@@ -136,7 +176,77 @@ router.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
+// UPDATE PROFILE
+router.put("/update-profile", authMiddleware, async (req, res) => {
+  try {
+    const { name, email, vehicleNumber, phone } = req.body;
+    const userId = req.user.id;
+
+    // Normalize inputs
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedVehicle = vehicleNumber ? vehicleNumber.trim().toUpperCase() : vehicleNumber;
+
+    // Check if email is already taken by another user
+    if (normalizedEmail) {
+      const existingEmailUser = await User.findOne({
+        email: normalizedEmail,
+        _id: { $ne: userId } // Exclude current user
+      });
+      if (existingEmailUser) {
+        return res.status(400).json({ message: "Email is already in use by another account" });
+      }
+    }
+
+    // Check if vehicle number is already taken by another user
+    if (normalizedVehicle) {
+      const existingVehicleUser = await User.findOne({
+        vehicleNumber: normalizedVehicle,
+        _id: { $ne: userId }
+      });
+      if (existingVehicleUser) {
+        return res.status(400).json({ message: "Vehicle number is already registered to another account" });
+      }
+    }
+
+    // Update user
+    const updateData = {};
+    if (name) updateData.name = name.trim();
+    if (normalizedEmail) updateData.email = normalizedEmail;
+    if (normalizedVehicle) updateData.vehicleNumber = normalizedVehicle;
+    if (phone !== undefined) updateData.phone = phone.trim();
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        vehicleNumber: updatedUser.vehicleNumber,
+        phone: updatedUser.phone,
+        role: updatedUser.role
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
+
+function normalizeEmail(email) {
+  return email ? email.trim().toLowerCase() : email;
+}
 
 // // GET /api/user/vehicle → Return vehicle details
 // router.get("/vehicle", authMiddleware, async (req, res) => {

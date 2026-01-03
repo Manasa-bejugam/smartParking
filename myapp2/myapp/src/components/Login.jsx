@@ -5,6 +5,8 @@ import './Login.css';
 const Login = ({ onSwitchToRegister }) => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [adminSecret, setAdminSecret] = useState('');
+    const [role, setRole] = useState('user'); // Default to user
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
@@ -15,18 +17,23 @@ const Login = ({ onSwitchToRegister }) => {
         setLoading(true);
 
         try {
-            const response = await fetch('https://smart-parking-backend-z9ww.onrender.com/api/auth/login', {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ identifier, password }),
+                body: JSON.stringify({ identifier, password, adminSecret }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
                 throw new Error(data.message || 'Login failed');
+            }
+
+            // Verify Role Match
+            if (data.user.role !== role) {
+                throw new Error(`Access Denied: This account is not authorized as ${role === 'admin' ? 'an Admin' : 'a User'}`);
             }
 
             // Store token and user data
@@ -46,6 +53,21 @@ const Login = ({ onSwitchToRegister }) => {
                 <p className="auth-subtitle">Login to your parking account</p>
 
                 <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="role-selector">
+                        <div
+                            className={`role-option ${role === 'user' ? 'active' : ''}`}
+                            onClick={() => setRole('user')}
+                        >
+                            👤 User
+                        </div>
+                        <div
+                            className={`role-option ${role === 'admin' ? 'active' : ''}`}
+                            onClick={() => setRole('admin')}
+                        >
+                            🛡️ Admin
+                        </div>
+                    </div>
+
                     <div className="input-group">
                         <label>Email or Vehicle Number</label>
                         <input
@@ -69,6 +91,20 @@ const Login = ({ onSwitchToRegister }) => {
                             className="auth-input"
                         />
                     </div>
+
+                    {role === 'admin' && (
+                        <div className="input-group">
+                            <label>Admin Token</label>
+                            <input
+                                type="password"
+                                placeholder="Paste your admin token"
+                                value={adminSecret}
+                                onChange={(e) => setAdminSecret(e.target.value)}
+                                required
+                                className="auth-input secret-input"
+                            />
+                        </div>
+                    )}
 
                     {error && <div className="error-message">⚠️ {error}</div>}
 

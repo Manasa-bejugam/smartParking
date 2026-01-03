@@ -21,9 +21,14 @@ const Slot = require("../models/slotModel");
 
 // Create Slot Route
 router.post("/create-slot", auth, admin, async (req, res) => {
-  const { slotNumber, isBooked } = req.body;
+  const { slotNumber, isBooked, section, city, area, address, placeType, latitude, longitude } = req.body;
   try {
-    const isAvailable = isBooked !== undefined ? !isBooked : true;
+    let isAvailable = true;
+    if (req.body.isAvailable !== undefined) {
+      isAvailable = req.body.isAvailable;
+    } else if (isBooked !== undefined) {
+      isAvailable = !isBooked;
+    }
 
     // Check if slot already exists
     const existingSlot = await Slot.findOne({ slotNumber });
@@ -33,11 +38,53 @@ router.post("/create-slot", auth, admin, async (req, res) => {
 
     const newSlot = new Slot({
       slotNumber,
-      isAvailable
+      isAvailable,
+      section: section || 'General',
+      section: section || 'General',
+      city,
+      area,
+      address,
+      placeType,
+      latitude,
+      longitude
     });
 
     await newSlot.save();
     res.status(201).json({ message: "Slot created successfully", slot: newSlot });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Slot (Admin only)
+router.put("/slot/:id", auth, admin, async (req, res) => {
+  try {
+    const { slotNumber, section, isAvailable } = req.body;
+    const slot = await Slot.findById(req.params.id);
+
+    if (!slot) {
+      return res.status(404).json({ message: "Slot not found" });
+    }
+
+    if (slotNumber) slot.slotNumber = slotNumber;
+    if (section) slot.section = section;
+    if (isAvailable !== undefined) slot.isAvailable = isAvailable;
+
+    await slot.save();
+    res.json({ message: "Slot updated successfully", slot });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete Slot (Admin only)
+router.delete("/slot/:id", auth, admin, async (req, res) => {
+  try {
+    const slot = await Slot.findByIdAndDelete(req.params.id);
+    if (!slot) {
+      return res.status(404).json({ message: "Slot not found" });
+    }
+    res.json({ message: "Slot deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

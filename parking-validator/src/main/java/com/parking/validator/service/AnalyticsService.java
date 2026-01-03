@@ -61,6 +61,14 @@ public class AnalyticsService {
                         Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
         response.setSlotUsage(slotUsage);
 
+        // Section usage statistics
+        Map<String, Integer> sectionUsage = bookings.stream()
+                .filter(b -> b.getSection() != null)
+                .collect(Collectors.groupingBy(
+                        BookingData::getSection,
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
+        response.setSectionUsage(sectionUsage);
+
         return response;
     }
 

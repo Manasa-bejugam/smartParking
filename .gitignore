@@ -1,0 +1,8 @@
+milestone1.md
+run_all.bat
+node_modules/
+.env
+dist/
+build/
+*.log
+.vscode/

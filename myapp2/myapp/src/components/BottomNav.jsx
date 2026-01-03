@@ -1,49 +1,54 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import './BottomNav.css';
 
 const BottomNav = ({ activeTab, onTabChange }) => {
+    const navItems = [
+        { id: 'map', icon: '🗺️', label: 'Map' },
+        { id: 'bookings', icon: '📋', label: 'Bookings' },
+        { id: 'payments', icon: '💳', label: 'Payments' },
+        { id: 'profile', icon: '👤', label: 'Profile' }
+    ];
+
     return (
-        <nav className="bottom-nav">
-            <button
-                className={`nav-item ${activeTab === 'map' ? 'active' : ''}`}
-                onClick={() => onTabChange('map')}
-            >
-                <span className="nav-icon">🗺️</span>
-                <span className="nav-label">Map</span>
-            </button>
+        <motion.nav
+            className="bottom-nav"
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+            {navItems.map((item) => (
+                <motion.button
+                    key={item.id}
+                    className={`nav-item ${activeTab === item.id || (activeTab === 'slots' && item.id === 'map') ? 'active' : ''}`}
+                    onClick={() => onTabChange(item.id)}
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
+                    aria-label={item.label}
+                    aria-current={activeTab === item.id ? 'page' : undefined}
+                >
+                    <motion.span
+                        className="nav-icon"
+                        animate={{
+                            scale: activeTab === item.id || (activeTab === 'slots' && item.id === 'map') ? 1.2 : 1,
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                        {item.icon}
+                    </motion.span>
+                    <span className="nav-label">{item.label}</span>
 
-            <button
-                className={`nav-item ${activeTab === 'slots' ? 'active' : ''}`}
-                onClick={() => onTabChange('slots')}
-            >
-                <span className="nav-icon">🅿️</span>
-                <span className="nav-label">Slots</span>
-            </button>
-
-            <button
-                className={`nav-item ${activeTab === 'bookings' ? 'active' : ''}`}
-                onClick={() => onTabChange('bookings')}
-            >
-                <span className="nav-icon">📋</span>
-                <span className="nav-label">Bookings</span>
-            </button>
-
-            <button
-                className={`nav-item ${activeTab === 'payments' ? 'active' : ''}`}
-                onClick={() => onTabChange('payments')}
-            >
-                <span className="nav-icon">💳</span>
-                <span className="nav-label">Payments</span>
-            </button>
-
-            <button
-                className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-                onClick={() => onTabChange('profile')}
-            >
-                <span className="nav-icon">👤</span>
-                <span className="nav-label">Profile</span>
-            </button>
-        </nav>
+                    {/* Active indicator */}
+                    {(activeTab === item.id || (activeTab === 'slots' && item.id === 'map')) && (
+                        <motion.div
+                            className="nav-indicator"
+                            layoutId="activeTab"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                    )}
+                </motion.button>
+            ))}
+        </motion.nav>
     );
 };
 

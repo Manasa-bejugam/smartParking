@@ -76,7 +76,8 @@ router.post("/create", authMiddleware, async (req, res) => {
             slot: slotId,
             vehicleNumber,
             startTime: start,
-            endTime: end
+            endTime: end,
+            parkingStatus: "SCHEDULED" // Explicitly start as SCHEDULED
         });
 
         await newBooking.save();
@@ -113,7 +114,17 @@ router.post("/create", authMiddleware, async (req, res) => {
 router.get("/my-bookings", authMiddleware, async (req, res) => {
     try {
         const bookings = await Booking.find({ user: req.user.id }).populate("slot");
-        res.json(bookings);
+
+        // Ensure all bookings have a status (for legacy data)
+        const sanitizedBookings = bookings.map(booking => {
+            const b = booking.toObject();
+            if (!b.parkingStatus) {
+                b.parkingStatus = "SCHEDULED";
+            }
+            return b;
+        });
+
+        res.json(sanitizedBookings);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -134,6 +145,266 @@ router.get("/all", authMiddleware, async (req, res) => {
 
         res.json(bookings);
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================
+// PARKING TIMER ENDPOINTS
+// ============================================
+
+const parkingTimerService = require("../services/parkingTimerService");
+const feeCalculationService = require("../services/feeCalculationService");
+const paymentSimulationService = require("../services/paymentSimulationService");
+
+// POST /api/bookings/:id/check-in - Record vehicle entry
+router.post("/:id/check-in", authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const userId = req.user.id;
+
+        // Find booking
+        const booking = await Booking.findById(bookingId).populate("slot");
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Verify ownership
+        if (booking.user.toString() !== userId) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Check if already checked in
+        if (booking.parkingStatus === "CHECKED_IN" || booking.parkingStatus === "CHECKED_OUT") {
+            return res.status(400).json({ message: "Booking already checked in" });
+        }
+
+        // Record entry time
+        const entryTime = new Date();
+        booking.actualEntryTime = entryTime;
+        booking.parkingStatus = "CHECKED_IN";
+        await booking.save();
+
+        console.log(`✓ Check-in successful for booking ${bookingId}`);
+
+        res.json({
+            message: "Check-in successful",
+            booking: {
+                id: booking._id,
+                slotNumber: booking.slot.slotNumber,
+                vehicleNumber: booking.vehicleNumber,
+                actualEntryTime: entryTime,
+                parkingStatus: "CHECKED_IN"
+            }
+        });
+
+    } catch (error) {
+        console.error("Check-in error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/bookings/:id/check-out - Record vehicle exit and calculate fee
+router.post("/:id/check-out", authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const userId = req.user.id;
+
+        // Find booking
+        const booking = await Booking.findById(bookingId).populate("slot");
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Verify ownership
+        if (booking.user.toString() !== userId) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Check if checked in
+        if (booking.parkingStatus !== "CHECKED_IN") {
+            return res.status(400).json({ message: "Booking must be checked in first" });
+        }
+
+        // Check if already checked out
+        if (booking.parkingStatus === "CHECKED_OUT") {
+            return res.status(400).json({ message: "Booking already checked out" });
+        }
+
+        // Record exit time
+        const exitTime = new Date();
+        booking.actualExitTime = exitTime;
+
+        // Calculate duration
+        const durationMinutes = parkingTimerService.calculateDuration(
+            booking.actualEntryTime,
+            exitTime
+        );
+        booking.actualDuration = durationMinutes;
+
+        // Calculate fee
+        const feeDetails = feeCalculationService.calculateFee(durationMinutes);
+        booking.payment.amount = feeDetails.fee;
+
+        // Update status
+        booking.parkingStatus = "CHECKED_OUT";
+        await booking.save();
+
+        // Make slot available again
+        const slot = await Slot.findById(booking.slot._id);
+        if (slot) {
+            slot.isAvailable = true;
+            await slot.save();
+            emitSlotUpdate(slot);
+        }
+
+        console.log(`✓ Check-out successful for booking ${bookingId}`);
+
+        res.json({
+            message: "Check-out successful",
+            booking: {
+                id: booking._id,
+                slotNumber: booking.slot.slotNumber,
+                vehicleNumber: booking.vehicleNumber,
+                actualEntryTime: booking.actualEntryTime,
+                actualExitTime: exitTime,
+                duration: parkingTimerService.getFormattedDuration(durationMinutes),
+                parkingStatus: "CHECKED_OUT"
+            },
+            feeDetails: {
+                actualDuration: feeDetails.actualDuration,
+                roundedDuration: feeDetails.roundedDuration,
+                fee: feeDetails.fee,
+                breakdown: feeCalculationService.getFeeBreakdown(durationMinutes)
+            }
+        });
+
+    } catch (error) {
+        console.error("Check-out error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/bookings/:id/process-payment - Process payment for booking
+router.post("/:id/process-payment", authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const userId = req.user.id;
+        const { method } = req.body; // payment method: upi, credit_card, etc.
+
+        // Find booking
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Verify ownership
+        if (booking.user.toString() !== userId) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Check if checked out
+        if (booking.parkingStatus !== "CHECKED_OUT") {
+            return res.status(400).json({ message: "Booking must be checked out first" });
+        }
+
+        // Check if already paid
+        if (booking.payment.status === "completed") {
+            return res.status(400).json({ message: "Payment already completed" });
+        }
+
+        const amount = booking.payment.amount;
+
+        // Validate amount
+        if (!paymentSimulationService.validateAmount(amount)) {
+            return res.status(400).json({ message: "Invalid payment amount" });
+        }
+
+        // Process payment (simulation)
+        const paymentResult = await paymentSimulationService.processPayment(amount, bookingId);
+
+        // Update booking payment details
+        booking.payment.status = paymentResult.status;
+        booking.payment.method = method || "upi";
+        booking.payment.transactionId = paymentResult.transactionId;
+        booking.payment.paidAt = paymentResult.success ? new Date() : null;
+
+        if (paymentResult.success) {
+            booking.status = "COMPLETED";
+        }
+
+        await booking.save();
+
+        console.log(`${paymentResult.success ? '✓' : '✗'} Payment ${paymentResult.status} for booking ${bookingId}`);
+
+        res.json({
+            message: paymentResult.message,
+            success: paymentResult.success,
+            payment: {
+                amount: amount,
+                method: booking.payment.method,
+                status: paymentResult.status,
+                transactionId: paymentResult.transactionId,
+                paidAt: booking.payment.paidAt
+            }
+        });
+
+    } catch (error) {
+        console.error("Payment processing error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/bookings/:id/fee-details - Get fee breakdown for a booking
+router.get("/:id/fee-details", authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const userId = req.user.id;
+
+        // Find booking
+        const booking = await Booking.findById(bookingId).populate("slot");
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Verify ownership (or admin)
+        if (booking.user.toString() !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Check if checked out
+        if (booking.parkingStatus !== "CHECKED_OUT") {
+            return res.status(400).json({ message: "Fee details available only after check-out" });
+        }
+
+        const durationMinutes = booking.actualDuration;
+        const feeDetails = feeCalculationService.calculateFee(durationMinutes);
+
+        res.json({
+            booking: {
+                id: booking._id,
+                slotNumber: booking.slot.slotNumber,
+                vehicleNumber: booking.vehicleNumber,
+                actualEntryTime: booking.actualEntryTime,
+                actualExitTime: booking.actualExitTime,
+                parkingStatus: booking.parkingStatus
+            },
+            duration: {
+                minutes: durationMinutes,
+                formatted: parkingTimerService.getFormattedDuration(durationMinutes)
+            },
+            fee: {
+                actualDuration: feeDetails.actualDuration,
+                roundedDuration: feeDetails.roundedDuration,
+                amount: feeDetails.fee,
+                breakdown: feeCalculationService.getFeeBreakdown(durationMinutes)
+            },
+            pricing: feeCalculationService.getPricingInfo(),
+            payment: booking.payment
+        });
+
+    } catch (error) {
+        console.error("Fee details error:", error);
         res.status(500).json({ error: error.message });
     }
 });

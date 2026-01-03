@@ -23,6 +23,21 @@ const BookingSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
+    // Parking Timer Fields
+    actualEntryTime: {
+        type: Date,
+    },
+    actualExitTime: {
+        type: Date,
+    },
+    actualDuration: {
+        type: Number, // Duration in minutes
+    },
+    parkingStatus: {
+        type: String,
+        enum: ["SCHEDULED", "CHECKED_IN", "CHECKED_OUT"],
+        default: "SCHEDULED",
+    },
     status: {
         type: String,
         enum: ["BOOKED", "COMPLETED", "CANCELLED"],

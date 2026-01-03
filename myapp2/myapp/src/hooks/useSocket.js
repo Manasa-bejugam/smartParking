@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'https://smart-parking-backend-z9ww.onrender.com';
+const SOCKET_URL = 'http://localhost:5000';
 
 export const useSocket = () => {
     const [isConnected, setIsConnected] = useState(false);

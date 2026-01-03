@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const slotSchema = new mongoose.Schema({
     slotNumber: { type: String, required: true, unique: true },
     isAvailable: { type: Boolean, default: true },
+    latitude: { type: Number }, // Real GPS Latitude
+    longitude: { type: Number }, // Real GPS Longitude
     location: {
         x: Number,
         y: Number
@@ -27,7 +29,11 @@ const slotSchema = new mongoose.Schema({
         enum: ['Shopping Mall', 'Cinema', 'Hospital', 'Metro Station', 'Market', 'Office Complex', 'Restaurant', 'Airport', 'Railway Station'],
         default: 'Shopping Mall'
     },
-    imageUrl: { type: String }
+    imageUrl: { type: String },
+    section: {
+        type: String,
+        default: 'General'
+    }
 });
 
 module.exports = mongoose.model("Slot", slotSchema);

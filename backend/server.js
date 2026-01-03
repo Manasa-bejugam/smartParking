@@ -64,7 +64,7 @@ mongoose
   .then(() => {
     console.log("MongoDB Connected");
     // Seed slots
-    const seedSlots = require("../seed/slotSeeder");
+    const seedSlots = require("./seed/slotSeeder");
     seedSlots();
   })
   .catch((err) => console.log("MongoDB connection error:", err));

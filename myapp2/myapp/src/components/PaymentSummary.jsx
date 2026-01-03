@@ -19,9 +19,29 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
     const calculatePayment = async () => {
         try {
             setLoading(true);
+
+            // Use actual times if available (from check-in/check-out), otherwise use scheduled times
+            const startTime = booking.actualEntryTime || booking.startTime;
+            const endTime = booking.actualExitTime || booking.endTime;
+            const duration = booking.actualDuration; // Duration in minutes from backend
+
+            // If we have actual duration from check-out, use it directly
+            if (duration && booking.actualExitTime) {
+                const durationHours = duration / 60;
+                const amount = Math.ceil(durationHours * 4) * 5; // ₹20 per hour = ₹5 per 15 min
+                setPaymentData({
+                    durationHours: durationHours,
+                    amount: amount,
+                    breakdown: `${duration} minutes (${Math.floor(duration / 60)}h ${duration % 60}m) × ₹20/hour = ₹${amount}`
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Otherwise calculate from times
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'https://smart-parking-backend-z9ww.onrender.com/api/payments/calculate',
+                'http://localhost:5000/api/payments/calculate',
                 {
                     method: 'POST',
                     headers: {
@@ -29,8 +49,8 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        startTime: booking.startTime,
-                        endTime: booking.endTime
+                        startTime: startTime,
+                        endTime: endTime
                     })
                 }
             );
@@ -49,16 +69,35 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
     const startTimer = () => {
         const updateTimer = () => {
             const now = new Date();
-            const start = new Date(booking.startTime);
-            const diff = start - now;
+            const start = new Date(booking.actualEntryTime || booking.startTime);
 
-            if (diff > 0) {
+            // If vehicle is checked in, show elapsed time
+            if (booking.actualEntryTime && !booking.actualExitTime) {
+                const diff = now - start;
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
                 setTimeRemaining({ hours, minutes, seconds });
-            } else {
-                setTimeRemaining({ hours: 0, minutes: 0, seconds: 0 });
+            }
+            // If checked out, show total duration
+            else if (booking.actualExitTime) {
+                const diff = new Date(booking.actualExitTime) - start;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                setTimeRemaining({ hours, minutes, seconds });
+            }
+            // Otherwise show countdown to scheduled start
+            else {
+                const diff = start - now;
+                if (diff > 0) {
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    setTimeRemaining({ hours, minutes, seconds });
+                } else {
+                    setTimeRemaining({ hours: 0, minutes: 0, seconds: 0 });
+                }
             }
         };
 
@@ -74,7 +113,7 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
 
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'https://smart-parking-backend-z9ww.onrender.com/api/payments/process',
+                'http://localhost:5000/api/payments/process',
                 {
                     method: 'POST',
                     headers: {
@@ -107,6 +146,13 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
         return <div className="payment-loading">Calculating payment...</div>;
     }
 
+    const displayStartTime = booking.actualEntryTime || booking.startTime;
+    const timerLabel = booking.actualEntryTime && !booking.actualExitTime
+        ? 'Parking Duration (Live)'
+        : booking.actualExitTime
+            ? 'Total Parking Duration'
+            : 'Time Until Parking Starts';
+
     return (
         <div className="payment-summary-container">
             <div className="payment-summary-card">
@@ -131,7 +177,10 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
                 </div>
 
                 <p className="parking-start-time">
-                    Parking started at {new Date(booking.startTime).toLocaleTimeString()}
+                    {booking.actualEntryTime
+                        ? `Vehicle entered at ${new Date(displayStartTime).toLocaleTimeString()}`
+                        : `Parking starts at ${new Date(displayStartTime).toLocaleTimeString()}`
+                    }
                 </p>
 
                 {/* Payment Summary */}

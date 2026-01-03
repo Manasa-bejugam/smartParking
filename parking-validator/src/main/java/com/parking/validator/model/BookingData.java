@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class BookingData {
     private String id;
     private String slotNumber;
+    private String section;
     private String vehicleNumber;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -39,6 +40,14 @@ public class BookingData {
 
     public void setSlotNumber(String slotNumber) {
         this.slotNumber = slotNumber;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
     }
 
     public String getVehicleNumber() {
