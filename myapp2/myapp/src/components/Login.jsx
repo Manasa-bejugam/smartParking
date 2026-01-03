@@ -18,7 +18,7 @@ const Login = ({ onSwitchToRegister }) => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        setLoadingMessage('Connecting to server... This may take up to 60 seconds on first try.');
+        setLoadingMessage('Connecting to server...');
 
         try {
             const response = await fetchWithRetry(`${API_BASE_URL}/auth/login`, {
@@ -27,7 +27,7 @@ const Login = ({ onSwitchToRegister }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ identifier, password, adminSecret }),
-            }, 5, 8000); // 5 retries, 8 second delay
+            }, 3, 5000); // 3 retries, 5 second delay
 
             const data = await response.json();
 

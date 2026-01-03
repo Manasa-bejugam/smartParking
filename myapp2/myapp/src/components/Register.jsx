@@ -34,7 +34,7 @@ const Register = ({ onSwitchToLogin }) => {
         setError('');
         setSuccess('');
         setLoading(true);
-        setLoadingMessage('Connecting to server... This may take up to 60 seconds on first try.');
+        setLoadingMessage('Connecting to server...');
 
         try {
             // Use retry wrapper for better cold start handling
@@ -44,7 +44,7 @@ const Register = ({ onSwitchToLogin }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
-            }, 5, 8000); // 5 retries, 8 second delay (up to 2 minutes total)
+            }, 3, 5000); // 3 retries, 5 second delay
 
             const data = await response.json();
 
