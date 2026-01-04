@@ -1,4 +1,4 @@
 // Backend API configuration
-// Use Render backend for production
-export const BACKEND_URL = 'https://smart-parking-backend-z9ww.onrender.com';
+// Use localhost for local development, Render for production (Vercel)
+export const BACKEND_URL = 'http://localhost:5000';
 export const API_BASE_URL = `${BACKEND_URL}/api`;
