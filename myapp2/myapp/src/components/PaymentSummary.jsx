@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import './PaymentSummary.css';
 
 const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
@@ -41,7 +42,7 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
             // Otherwise calculate from times
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'http://localhost:5000/api/payments/calculate',
+                `${API_BASE_URL}/payments/calculate`,
                 {
                     method: 'POST',
                     headers: {
@@ -113,7 +114,7 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
 
             const token = localStorage.getItem('token');
             const response = await fetch(
-                'http://localhost:5000/api/payments/process',
+                `${API_BASE_URL}/payments/process`,
                 {
                     method: 'POST',
                     headers: {
