@@ -58,11 +58,11 @@ const FeeDetails = ({ bookingId, onClose }) => {
                         <h4>Booking Information</h4>
                         <div className="info-row">
                             <span className="label">Slot:</span>
-                            <span className="value">#{feeData.booking.slotNumber}</span>
+                            <span className="value">#{feeData?.booking?.slotNumber || 'N/A'}</span>
                         </div>
                         <div className="info-row">
                             <span className="label">Vehicle:</span>
-                            <span className="value">{feeData.booking.vehicleNumber}</span>
+                            <span className="value">{feeData?.booking?.vehicleNumber || 'N/A'}</span>
                         </div>
                     </div>
 
@@ -72,18 +72,18 @@ const FeeDetails = ({ bookingId, onClose }) => {
                         <div className="info-row">
                             <span className="label">Entry Time:</span>
                             <span className="value">
-                                {new Date(feeData.booking.actualEntryTime).toLocaleString()}
+                                {feeData?.booking?.actualEntryTime ? new Date(feeData.booking.actualEntryTime).toLocaleString() : 'N/A'}
                             </span>
                         </div>
                         <div className="info-row">
                             <span className="label">Exit Time:</span>
                             <span className="value">
-                                {new Date(feeData.booking.actualExitTime).toLocaleString()}
+                                {feeData?.booking?.actualExitTime ? new Date(feeData.booking.actualExitTime).toLocaleString() : 'N/A'}
                             </span>
                         </div>
                         <div className="info-row highlight">
                             <span className="label">Total Duration:</span>
-                            <span className="value">{feeData.duration.formatted}</span>
+                            <span className="value">{feeData?.duration?.formatted || 'N/A'}</span>
                         </div>
                     </div>
 
@@ -92,13 +92,13 @@ const FeeDetails = ({ bookingId, onClose }) => {
                         <h4>Fee Breakdown</h4>
                         <div className="info-row">
                             <span className="label">Actual Duration:</span>
-                            <span className="value">{feeData.fee.actualDuration}</span>
+                            <span className="value">{feeData?.fee?.actualDuration || 'N/A'}</span>
                         </div>
                         <div className="info-row">
                             <span className="label">Rounded Duration:</span>
-                            <span className="value">{feeData.fee.roundedDuration}</span>
+                            <span className="value">{feeData?.fee?.roundedDuration || 'N/A'}</span>
                         </div>
-                        {feeData.fee.breakdown && (
+                        {feeData?.fee?.breakdown && (
                             <div className="breakdown-details">
                                 <p>{feeData.fee.breakdown}</p>
                             </div>
@@ -118,7 +118,9 @@ const FeeDetails = ({ bookingId, onClose }) => {
                     {/* Total Amount */}
                     <div className="total-section">
                         <span className="total-label">Total Amount:</span>
-                        <span className="total-amount">₹{feeData.fee.amount.toFixed(2)}</span>
+                        <span className="total-amount">
+                            ₹{feeData?.fee?.amount ? feeData.fee.amount.toFixed(2) : '0.00'}
+                        </span>
                     </div>
 
                     {/* Payment Status */}
