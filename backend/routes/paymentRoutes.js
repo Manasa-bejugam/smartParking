@@ -16,29 +16,39 @@ router.post("/calculate", authMiddleware, async (req, res) => {
             return res.status(400).json({ message: "Start time and end time are required" });
         }
 
-        // Call Java service to calculate payment
-        const paymentResponse = await axios.post(`${JAVA_ANALYTICS_URL}/calculate-payment`, {
-            startTime,
-            endTime
-        }, {
-            timeout: 5000
-        });
+        try {
+            // Try calling Java service first
+            const paymentResponse = await axios.post(`${JAVA_ANALYTICS_URL}/calculate-payment`, {
+                startTime,
+                endTime
+            }, {
+                timeout: 5000
+            });
 
-        res.json(paymentResponse.data);
+            return res.json(paymentResponse.data);
+        } catch (javaError) {
+            // If Java service fails, use local calculation as fallback
+            console.log("Java service unavailable, using fallback calculation");
 
-    } catch (error) {
-        console.error("Payment calculation error:", error.message);
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const durationMs = end - start;
+            const durationMinutes = Math.ceil(durationMs / (1000 * 60));
+            const durationHours = durationMinutes / 60;
 
-        if (error.response?.data?.error) {
-            return res.status(400).json({ message: error.response.data.error });
-        }
+            // ₹20 per hour, rounded up to nearest 15 minutes
+            const roundedMinutes = Math.ceil(durationMinutes / 15) * 15;
+            const amount = (roundedMinutes / 60) * 20;
 
-        if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
-            return res.status(503).json({
-                message: "Payment service unavailable. Please ensure Java service is running."
+            return res.json({
+                durationHours: durationHours,
+                amount: amount,
+                breakdown: `${durationMinutes} minutes (${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m) × ₹20/hour = ₹${amount}`
             });
         }
 
+    } catch (error) {
+        console.error("Payment calculation error:", error.message);
         res.status(500).json({
             message: "Failed to calculate payment",
             error: error.message
