@@ -14,11 +14,15 @@
     border: 1px solid var(--border-color);
     position: relative;
     box-shadow: var(--shadow-sm);
-    height: 140px;
+    height: 155px;
+    /* Increased from 140px */
+    min-width: 75px;
+    /* Added min-width for better spacing */
 }
 
 .slot-card h3 {
-    font-size: var(--text-lg);
+    font-size: 15px;
+    /* Slightly larger for better readability */
     font-weight: var(--font-bold);
     margin: 0;
     color: var(--text-primary);

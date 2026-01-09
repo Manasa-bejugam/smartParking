@@ -30,8 +30,13 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
             status: booking.status
         }));
 
+
         // Call Java analytics service
         let analyticsData = {};
+
+        // Calculate REAL revenue from actual payments in database
+        const realTotalRevenue = bookings.reduce((sum, b) => sum + (b.payment?.amount || 0), 0);
+
         try {
             const analyticsResponse = await axios.post(`${JAVA_ANALYTICS_URL}/stats`, {
                 bookings: bookingData
@@ -39,6 +44,10 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
                 timeout: 5000 // Short timeout for Java service
             });
             analyticsData = analyticsResponse.data;
+
+            // OVERRIDE Java service's calculated revenue with REAL revenue from database
+            analyticsData.totalRevenue = realTotalRevenue;
+
         } catch (javaError) {
             console.warn("Java analytics service unavailable, falling back to basic stats:", javaError.message);
             // Basic fallback stats if Java service is down
@@ -46,7 +55,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
                 totalBookings: bookings.length,
                 activeBookings: bookings.filter(b => b.status === 'BOOKED').length,
                 completedBookings: bookings.filter(b => b.status === 'COMPLETED').length,
-                totalRevenue: bookings.reduce((sum, b) => sum + (b.payment?.amount || 0), 0),
+                totalRevenue: realTotalRevenue, // Use real revenue
                 averageDuration: 0,
                 peakHour: 'N/A',
                 slotUsage: {}

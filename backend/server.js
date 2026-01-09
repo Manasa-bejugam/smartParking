@@ -49,6 +49,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const alertRoutes = require("./routes/alertRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -60,6 +61,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/admin/alerts", alertRoutes);
+app.use("/api/reports", reportRoutes);
 
 // MongoDB Connection
 mongoose

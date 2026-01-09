@@ -3,6 +3,7 @@ import { getAllUsers, createSlot, getAllBookings, fetchSlots, getAnalytics, dele
 import AdminAnalytics from '../components/AdminAnalytics';
 import RecentActivity from '../components/RecentActivity';
 import UserDetailModal from '../components/UserDetailModal';
+import ReportsDashboard from '../components/ReportsDashboard';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ onSwitchToUserView }) => {
@@ -354,6 +355,12 @@ const AdminDashboard = ({ onSwitchToUserView }) => {
                     onClick={() => setActiveTab('alerts')}
                 >
                     🚨 Alerts
+                </button>
+                <button
+                    className={`tab ${activeTab === 'reports' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('reports')}
+                >
+                    📊 Reports
                 </button>
             </div>
 
@@ -1049,6 +1056,11 @@ const AdminDashboard = ({ onSwitchToUserView }) => {
                             )}
                         </div>
                     </div>
+                )}
+
+                {/* Reports Tab */}
+                {activeTab === 'reports' && (
+                    <ReportsDashboard />
                 )}
             </div>
 

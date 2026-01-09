@@ -451,3 +451,170 @@ export const getAreaAlerts = async (area) => {
         throw error;
     }
 };
+
+// ============ REPORTS API FUNCTIONS ============
+
+// Admin: Fetch usage report with filters
+export const fetchUsageReport = async (startDate, endDate, filters = {}) => {
+    try {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (filters.slotId) params.append('slotId', filters.slotId);
+        if (filters.userType) params.append('userType', filters.userType);
+        if (filters.city) params.append('city', filters.city);
+        if (filters.area) params.append('area', filters.area);
+        if (filters.address) params.append('address', filters.address);
+
+        const response = await fetch(`${API_BASE_URL}/reports/usage?${params.toString()}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch usage report');
+        }
+
+        const data = await response.json();
+        return data.report;
+    } catch (error) {
+        console.error('Error fetching usage report:', error);
+        throw error;
+    }
+};
+
+// User: Fetch personal statistics
+export const fetchMyStats = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/reports/my-stats`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch personal statistics');
+        }
+
+        const data = await response.json();
+        return data.stats;
+    } catch (error) {
+        console.error('Error fetching personal stats:', error);
+        throw error;
+    }
+};
+
+// Admin: Export report as CSV
+export const exportReportCSV = async (startDate, endDate, filters = {}) => {
+    try {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (filters.slotId) params.append('slotId', filters.slotId);
+        if (filters.userType) params.append('userType', filters.userType);
+        if (filters.city) params.append('city', filters.city);
+        if (filters.area) params.append('area', filters.area);
+        if (filters.address) params.append('address', filters.address);
+
+        const response = await fetch(`${API_BASE_URL}/reports/export/csv?${params.toString()}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to export CSV');
+        }
+
+        // Get the CSV blob
+        const blob = await response.blob();
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `parking_report_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        throw error;
+    }
+};
+
+// User: Export personal data as CSV
+export const exportMyCSV = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/reports/export/my-csv`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to export personal CSV');
+        }
+
+        // Get the CSV blob
+        const blob = await response.blob();
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `my_parking_history_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error exporting personal CSV:', error);
+        throw error;
+    }
+};
+
+// Admin: Fetch peak hours data
+export const fetchPeakHours = async (startDate, endDate) => {
+    try {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        const response = await fetch(`${API_BASE_URL}/reports/peak-hours?${params.toString()}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch peak hours');
+        }
+
+        const data = await response.json();
+        return data.peakHours;
+    } catch (error) {
+        console.error('Error fetching peak hours:', error);
+        throw error;
+    }
+};
+
+// Admin: Fetch slot utilization data
+export const fetchSlotUtilization = async (startDate, endDate) => {
+    try {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        const response = await fetch(`${API_BASE_URL}/reports/slot-utilization?${params.toString()}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch slot utilization');
+        }
+
+        const data = await response.json();
+        return data.slotUtilization;
+    } catch (error) {
+        console.error('Error fetching slot utilization:', error);
+        throw error;
+    }
+};
+

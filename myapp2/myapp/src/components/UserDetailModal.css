@@ -83,14 +83,15 @@
 
 .info-label {
     font-size: 12px;
-    color: var(--text-secondary, #666);
+    color: #666;
     text-transform: uppercase;
     font-weight: 600;
 }
 
 .info-value {
     font-size: 16px;
-    color: var(--text-primary, #333);
+    color: #1a1a1a;
+    font-weight: 500;
 }
 
 /* Statistics Section */
@@ -243,15 +244,69 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .user-detail-modal {
-        --card-bg: #1e1e1e;
-        --text-primary: #ffffff;
-        --text-secondary: #b0b0b0;
-        --border-color: #333;
-        --table-header-bg: #2a2a2a;
-        --hover-bg: #2a2a2a;
-    }
+[data-theme="dark"] .user-detail-modal,
+.dark-mode .user-detail-modal {
+    background: #1e1e1e;
+}
+
+[data-theme="dark"] .modal-header,
+.dark-mode .modal-header {
+    background: #1e1e1e;
+    border-bottom-color: #333;
+}
+
+[data-theme="dark"] .modal-header h2,
+.dark-mode .modal-header h2,
+[data-theme="dark"] .info-section h3,
+.dark-mode .info-section h3,
+[data-theme="dark"] .stats-section h3,
+.dark-mode .stats-section h3,
+[data-theme="dark"] .bookings-section h3,
+.dark-mode .bookings-section h3 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .info-label,
+.dark-mode .info-label {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .info-value,
+.dark-mode .info-value {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .bookings-table thead,
+.dark-mode .bookings-table thead {
+    background: #2a2a2a;
+}
+
+[data-theme="dark"] .bookings-table th,
+.dark-mode .bookings-table th,
+[data-theme="dark"] .bookings-table td,
+.dark-mode .bookings-table td {
+    color: #ffffff;
+    border-bottom-color: #333;
+}
+
+[data-theme="dark"] .bookings-table tbody tr:hover,
+.dark-mode .bookings-table tbody tr:hover {
+    background: #2a2a2a;
+}
+
+[data-theme="dark"] .bookings-table small,
+.dark-mode .bookings-table small {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .no-bookings,
+.dark-mode .no-bookings {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .close-btn,
+.dark-mode .close-btn {
+    color: #b0b0b0;
 }
 
 /* Responsive */

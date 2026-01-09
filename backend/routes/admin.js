@@ -93,6 +93,7 @@ router.get("/users/:userId/details", auth, admin, async (req, res) => {
 });
 
 const Slot = require("../models/slotModel");
+const { generateSlotName } = require("../utils/slotNaming");
 
 // Create Slot Route
 router.post("/create-slot", auth, admin, async (req, res) => {
@@ -105,27 +106,41 @@ router.post("/create-slot", auth, admin, async (req, res) => {
       isAvailable = !isBooked;
     }
 
+    // Generate slot name using new naming convention
+    // If slotNumber is provided, use it as the slot ID part
+    // Otherwise, auto-generate a slot ID
+    const slotId = slotNumber || `A${Date.now().toString().slice(-3)}`;
+    const generatedSlotName = generateSlotName(
+      city || 'Hyderabad',
+      address || 'Smart Parking Complex',
+      slotId,
+      placeType
+    );
+
     // Check if slot already exists
-    const existingSlot = await Slot.findOne({ slotNumber });
+    const existingSlot = await Slot.findOne({ slotNumber: generatedSlotName });
     if (existingSlot) {
-      return res.status(400).json({ message: "Slot number already exists" });
+      return res.status(400).json({ message: `Slot ${generatedSlotName} already exists` });
     }
 
     const newSlot = new Slot({
-      slotNumber,
+      slotNumber: generatedSlotName,
       isAvailable,
       section: section || 'General',
-      section: section || 'General',
-      city,
-      area,
-      address,
-      placeType,
+      city: city || 'Hyderabad',
+      area: area || 'Madhapur',
+      address: address || 'Smart Parking Complex',
+      placeType: placeType || 'Shopping Mall',
       latitude,
       longitude
     });
 
     await newSlot.save();
-    res.status(201).json({ message: "Slot created successfully", slot: newSlot });
+    res.status(201).json({
+      message: "Slot created successfully",
+      slot: newSlot,
+      info: `Generated slot name: ${generatedSlotName}`
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

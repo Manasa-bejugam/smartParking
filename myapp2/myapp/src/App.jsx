@@ -11,6 +11,7 @@ import BottomNav from "./components/BottomNav";
 import MyBookings from "./components/MyBookings";
 import MyPayments from "./components/MyPayments";
 import LocationFilter from "./components/LocationFilter";
+import UserReports from "./components/UserReports";
 import { fetchSlots, getMyBookings } from "./api";
 import { useSocket } from "./hooks/useSocket";
 import { API_BASE_URL } from "./config";
@@ -613,6 +614,12 @@ const UserDashboard = () => {
           {activeTab === 'profile' && (
             <div className="tab-content profile-tab">
               <ProfileContent user={user} />
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="tab-content">
+              <UserReports />
             </div>
           )}
 

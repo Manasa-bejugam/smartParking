@@ -1,0 +1,282 @@
+[
+  {
+    "_id": "694bfdd82fb1dbdad52d9e27",
+    "oldName": "A2",
+    "city": "Hyderabad",
+    "address": "Inorbit Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e28",
+    "oldName": "A3",
+    "city": "Hyderabad",
+    "address": "Inorbit Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e29",
+    "oldName": "A4",
+    "city": "Hyderabad",
+    "address": "Inorbit Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2a",
+    "oldName": "A5",
+    "city": "Hyderabad",
+    "address": "Inorbit Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2b",
+    "oldName": "A1",
+    "city": "Hyderabad",
+    "address": "AMB Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2c",
+    "oldName": "A2",
+    "city": "Hyderabad",
+    "address": "AMB Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2d",
+    "oldName": "A3",
+    "city": "Hyderabad",
+    "address": "AMB Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2e",
+    "oldName": "A4",
+    "city": "Hyderabad",
+    "address": "AMB Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e2f",
+    "oldName": "A1",
+    "city": "Hyderabad",
+    "address": "Apollo Hospital Parking",
+    "placeType": "Hospital"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e30",
+    "oldName": "A2",
+    "city": "Hyderabad",
+    "address": "Apollo Hospital Parking",
+    "placeType": "Hospital"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e31",
+    "oldName": "A3",
+    "city": "Hyderabad",
+    "address": "Apollo Hospital Parking",
+    "placeType": "Hospital"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e32",
+    "oldName": "A1",
+    "city": "Bangalore",
+    "address": "Forum Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e33",
+    "oldName": "A2",
+    "city": "Bangalore",
+    "address": "Forum Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e34",
+    "oldName": "A3",
+    "city": "Bangalore",
+    "address": "Forum Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e35",
+    "oldName": "A4",
+    "city": "Bangalore",
+    "address": "Forum Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e36",
+    "oldName": "A5",
+    "city": "Bangalore",
+    "address": "Forum Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e37",
+    "oldName": "A1",
+    "city": "Bangalore",
+    "address": "Phoenix Marketcity Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e38",
+    "oldName": "A2",
+    "city": "Bangalore",
+    "address": "Phoenix Marketcity Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e39",
+    "oldName": "A3",
+    "city": "Bangalore",
+    "address": "Phoenix Marketcity Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3a",
+    "oldName": "A4",
+    "city": "Bangalore",
+    "address": "Phoenix Marketcity Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3b",
+    "oldName": "A5",
+    "city": "Bangalore",
+    "address": "Phoenix Marketcity Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3c",
+    "oldName": "A1",
+    "city": "Mumbai",
+    "address": "Infinity Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3d",
+    "oldName": "A2",
+    "city": "Mumbai",
+    "address": "Infinity Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3e",
+    "oldName": "A3",
+    "city": "Mumbai",
+    "address": "Infinity Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e3f",
+    "oldName": "A4",
+    "city": "Mumbai",
+    "address": "Infinity Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e40",
+    "oldName": "A1",
+    "city": "Mumbai",
+    "address": "PVR Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e41",
+    "oldName": "A2",
+    "city": "Mumbai",
+    "address": "PVR Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd82fb1dbdad52d9e42",
+    "oldName": "A3",
+    "city": "Mumbai",
+    "address": "PVR Cinemas Parking",
+    "placeType": "Cinema"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e43",
+    "oldName": "A1",
+    "city": "Delhi",
+    "address": "Palika Bazaar Parking",
+    "placeType": "Market"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e44",
+    "oldName": "A2",
+    "city": "Delhi",
+    "address": "Palika Bazaar Parking",
+    "placeType": "Market"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e45",
+    "oldName": "A3",
+    "city": "Delhi",
+    "address": "Palika Bazaar Parking",
+    "placeType": "Market"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e46",
+    "oldName": "A4",
+    "city": "Delhi",
+    "address": "Palika Bazaar Parking",
+    "placeType": "Market"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e47",
+    "oldName": "A1",
+    "city": "Delhi",
+    "address": "Metro Station Parking",
+    "placeType": "Metro Station"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e48",
+    "oldName": "A2",
+    "city": "Delhi",
+    "address": "Metro Station Parking",
+    "placeType": "Metro Station"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e49",
+    "oldName": "A3",
+    "city": "Delhi",
+    "address": "Metro Station Parking",
+    "placeType": "Metro Station"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e4a",
+    "oldName": "A1",
+    "city": "Chennai",
+    "address": "Express Avenue Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e4b",
+    "oldName": "A2",
+    "city": "Chennai",
+    "address": "Express Avenue Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e4c",
+    "oldName": "A3",
+    "city": "Chennai",
+    "address": "Express Avenue Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "694bfdd92fb1dbdad52d9e4d",
+    "oldName": "A4",
+    "city": "Chennai",
+    "address": "Express Avenue Mall Parking",
+    "placeType": "Shopping Mall"
+  },
+  {
+    "_id": "695bcbe91de7920028454a91",
+    "oldName": "B1",
+    "city": "Hyderabad",
+    "address": "inorbit mall",
+    "placeType": "Shopping Mall"
+  }
+]

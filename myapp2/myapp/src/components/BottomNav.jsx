@@ -8,6 +8,7 @@ const BottomNav = ({ activeTab, onTabChange }) => {
         { id: 'book', icon: '✨', label: 'Book' },
         { id: 'bookings', icon: '📋', label: 'Bookings' },
         { id: 'payments', icon: '💳', label: 'Payments' },
+        { id: 'reports', icon: '📊', label: 'Reports' },
         { id: 'profile', icon: '👤', label: 'Profile' }
     ];
 
