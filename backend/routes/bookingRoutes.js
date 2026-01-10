@@ -372,8 +372,8 @@ router.get("/:id/fee-details", authMiddleware, async (req, res) => {
             return res.status(403).json({ message: "Access denied" });
         }
 
-        // Check if checked out
-        if (booking.parkingStatus !== "CHECKED_OUT") {
+        // Check if checked out or completed
+        if (booking.parkingStatus !== "CHECKED_OUT" && booking.status !== "COMPLETED") {
             return res.status(400).json({ message: "Fee details available only after check-out" });
         }
 
