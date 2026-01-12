@@ -5,12 +5,14 @@ const Slot = require("../models/slotModel");
 const authMiddleware = require("../middleware/authMiddleware");
 const { emitBookingNotification, emitSlotUpdate } = require("../socketHandlers");
 const axios = require("axios");
+const logger = require("../utils/logger");
+const { validationSchemas, validate } = require("../middleware/validators");
 
 // Java Validation Service URL
 const JAVA_VALIDATOR_URL = process.env.JAVA_VALIDATOR_URL || "http://localhost:8080/api/validate-slot";
 
 // POST /api/bookings/create
-router.post("/create", authMiddleware, async (req, res) => {
+router.post("/create", authMiddleware, validationSchemas.createBooking, validate, async (req, res) => {
     try {
         const { slotId, vehicleNumber, startTime, endTime } = req.body;
         const userId = req.user.id;

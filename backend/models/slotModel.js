@@ -36,4 +36,9 @@ const slotSchema = new mongoose.Schema({
     }
 });
 
+// Indexes for performance
+slotSchema.index({ city: 1, area: 1, isAvailable: 1 }); // Location-based searches
+slotSchema.index({ isAvailable: 1 }); // Filter available slots
+slotSchema.index({ slotNumber: 1 }, { unique: true }); // Ensure uniqueness
+
 module.exports = mongoose.model("Slot", slotSchema);

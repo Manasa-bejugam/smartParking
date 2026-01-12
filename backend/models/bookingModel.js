@@ -71,4 +71,11 @@ const BookingSchema = new mongoose.Schema({
     },
 });
 
+// Indexes for performance
+BookingSchema.index({ user: 1, createdAt: -1 }); // User's bookings sorted by date
+BookingSchema.index({ slot: 1, startTime: 1, endTime: 1 }); // Slot availability checks
+BookingSchema.index({ parkingStatus: 1 }); // Filter by parking status
+BookingSchema.index({ status: 1 }); // Filter by booking status
+BookingSchema.index({ 'payment.status': 1 }); // Filter by payment status
+
 module.exports = mongoose.model("Booking", BookingSchema);

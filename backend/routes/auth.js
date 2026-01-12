@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const logger = require("../utils/logger");
+const { validationSchemas, validate } = require("../middleware/validators");
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
@@ -9,7 +11,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || "SmartParkingAdmin2024";
 const JWT_SECRET = process.env.JWT_SECRET || "smartparking_jwt_secret";
 
 // REGISTER
-router.post("/register", async (req, res) => {
+router.post("/register", validationSchemas.register, validate, async (req, res) => {
   try {
     const { name, email, password, vehicleNumber, vehicleType, phone, role, adminSecret } =
       req.body;
@@ -86,15 +88,15 @@ router.post("/register", async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error("Registration error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // LOGIN
-router.post("/login", async (req, res) => {
+router.post("/login", validationSchemas.login, validate, async (req, res) => {
   try {
-    console.log("Login body:", req.body);
+    logger.info("Login attempt for:", { email: req.body.email || req.body.identifier });
     const { email, vehicleNumber, identifier, password } = req.body;
     const loginId = (identifier || email || vehicleNumber || "").trim();
 
@@ -154,7 +156,7 @@ router.post("/login", async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login error:", error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -237,7 +239,7 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Update profile error:", error);
+    logger.error("Update profile error:", error);
     res.status(500).json({ error: error.message });
   }
 });

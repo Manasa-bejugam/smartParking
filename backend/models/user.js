@@ -16,4 +16,9 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
+// Indexes for performance
+UserSchema.index({ email: 1 }, { unique: true }); // Email lookups
+UserSchema.index({ vehicleNumber: 1 }, { unique: true, sparse: true }); // Vehicle lookups (sparse for admins without vehicles)
+UserSchema.index({ role: 1 }); // Filter by role
+
 module.exports = mongoose.model("User", UserSchema);
