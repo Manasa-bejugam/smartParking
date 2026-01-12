@@ -47,7 +47,7 @@ const validators = {
             .trim()
             .customSanitizer(value => value ? value.replace(/[\s-]/g, '').toUpperCase() : value)
             .notEmpty().withMessage('Vehicle number is required')
-            .isLength({ min: 6, max: 15 }).withMessage('Vehicle number must be 6-15 characters')
+            .isLength({ min: 4, max: 15 }).withMessage('Vehicle number must be 4-15 characters')
             .matches(/^[A-Z0-9]+$/).withMessage('Vehicle number must contain only letters and numbers'),
 
     // Date/Time validation
@@ -88,7 +88,7 @@ const validationSchemas = {
             .optional()
             .trim()
             .customSanitizer(value => value ? value.replace(/[\s-]/g, '').toUpperCase() : value)
-            .isLength({ min: 6, max: 15 }).withMessage('Vehicle number must be 6-15 characters')
+            .isLength({ min: 4, max: 15 }).withMessage('Vehicle number must be 4-15 characters')
             .matches(/^[A-Z0-9]+$/).withMessage('Vehicle number must contain only letters and numbers')
     ],
 
