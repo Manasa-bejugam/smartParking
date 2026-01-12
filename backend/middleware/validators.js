@@ -41,11 +41,14 @@ const validators = {
             .matches(/[0-9]/).withMessage('Password must contain at least one number')
             .matches(/[!@#$%^&*]/).withMessage('Password must contain at least one special character'),
 
-    // Vehicle number validation (Indian format)
+    // Vehicle number validation (flexible format with sanitization)
     vehicleNumber: () =>
         body('vehicleNumber')
-            .matches(/^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/)
-            .withMessage('Invalid vehicle number format (e.g., MH12AB1234)'),
+            .trim()
+            .customSanitizer(value => value ? value.replace(/[\s-]/g, '').toUpperCase() : value)
+            .notEmpty().withMessage('Vehicle number is required')
+            .isLength({ min: 6, max: 15 }).withMessage('Vehicle number must be 6-15 characters')
+            .matches(/^[A-Z0-9]+$/).withMessage('Vehicle number must contain only letters and numbers'),
 
     // Date/Time validation
     dateTime: (field) =>
@@ -81,7 +84,12 @@ const validationSchemas = {
         body('name').trim().notEmpty().withMessage('Name is required'),
         validators.email(),
         validators.password(),
-        body('vehicleNumber').optional().matches(/^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/)
+        body('vehicleNumber')
+            .optional()
+            .trim()
+            .customSanitizer(value => value ? value.replace(/[\s-]/g, '').toUpperCase() : value)
+            .isLength({ min: 6, max: 15 }).withMessage('Vehicle number must be 6-15 characters')
+            .matches(/^[A-Z0-9]+$/).withMessage('Vehicle number must contain only letters and numbers')
     ],
 
     // User login
