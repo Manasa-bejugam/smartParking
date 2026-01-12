@@ -9,7 +9,6 @@ build/
 
 # Security - Admin invite tokens
 backend/invite_token.txt
-backend/generateInvite.js
 
 # Database seeding (contains production credentials)
 backend/seedProductionDB.js
