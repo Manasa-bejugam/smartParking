@@ -375,9 +375,21 @@ router.get("/:id/fee-details", authMiddleware, async (req, res) => {
             return res.status(403).json({ message: "Access denied" });
         }
 
-        // Check if checked out or completed
-        if (booking.parkingStatus !== "CHECKED_OUT" && booking.status !== "COMPLETED") {
-            return res.status(400).json({ message: "Fee details available only after check-out" });
+        // Allow fee details for COMPLETED bookings or CHECKED_OUT bookings
+        if (booking.status !== "COMPLETED" && booking.parkingStatus !== "CHECKED_OUT") {
+            return res.status(400).json({
+                message: "Fee details available only after check-out",
+                currentStatus: booking.parkingStatus,
+                bookingStatus: booking.status
+            });
+        }
+
+        // Check if actualDuration exists
+        if (!booking.actualDuration || booking.actualDuration === 0) {
+            return res.status(400).json({
+                message: "Duration data not available for this booking",
+                hint: "This booking may not have check-in/check-out data"
+            });
         }
 
         const durationMinutes = booking.actualDuration;
@@ -390,7 +402,8 @@ router.get("/:id/fee-details", authMiddleware, async (req, res) => {
                 vehicleNumber: booking.vehicleNumber,
                 actualEntryTime: booking.actualEntryTime,
                 actualExitTime: booking.actualExitTime,
-                parkingStatus: booking.parkingStatus
+                parkingStatus: booking.parkingStatus,
+                status: booking.status
             },
             duration: {
                 minutes: durationMinutes,
@@ -408,6 +421,7 @@ router.get("/:id/fee-details", authMiddleware, async (req, res) => {
 
     } catch (error) {
         console.error("Fee details error:", error);
+        logger.error("Fee details error:", error);
         res.status(500).json({ error: error.message });
     }
 });
