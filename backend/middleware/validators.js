@@ -86,7 +86,16 @@ const validationSchemas = {
 
     // User login
     login: [
-        validators.email(),
+        body('identifier')
+            .optional()
+            .trim()
+            .notEmpty().withMessage('Email or Vehicle Number is required'),
+        body('email')
+            .optional()
+            .trim(),
+        body('vehicleNumber')
+            .optional()
+            .trim(),
         body('password').notEmpty().withMessage('Password is required')
     ],
 
