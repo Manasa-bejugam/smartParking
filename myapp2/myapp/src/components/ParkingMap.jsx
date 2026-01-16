@@ -132,6 +132,7 @@ const ParkingMap = ({ slots, onSelectSlot }) => {
 
         setMapCenter(targetCenter);
         setDemoAnchor(targetCenter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slots]); // Run whenever the slots list updates (filter changed)
 
     // Fetch alerts for all slots
