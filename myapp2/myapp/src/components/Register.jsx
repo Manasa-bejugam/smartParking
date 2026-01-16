@@ -12,7 +12,6 @@ const Register = ({ onSwitchToLogin }) => {
         vehicleNumber: '',
         vehicleType: '',
         phone: '',
-        phone: '',
         role: 'user',
         adminSecret: ''
     });

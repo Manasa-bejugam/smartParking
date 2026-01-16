@@ -14,7 +14,9 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
 
     useEffect(() => {
         calculatePayment();
-        startTimer();
+        const cleanup = startTimer();
+        return cleanup;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [booking]);
 
     const calculatePayment = async () => {
@@ -148,11 +150,6 @@ const PaymentSummary = ({ booking, onPaymentComplete, onCancel }) => {
     }
 
     const displayStartTime = booking.actualEntryTime || booking.startTime;
-    const timerLabel = booking.actualEntryTime && !booking.actualExitTime
-        ? 'Parking Duration (Live)'
-        : booking.actualExitTime
-            ? 'Total Parking Duration'
-            : 'Time Until Parking Starts';
 
     return (
         <div className="payment-summary-container">

@@ -43,6 +43,7 @@ const ReportsDashboard = () => {
 
     useEffect(() => {
         loadReport();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [startDate, endDate, filters]);
 
     const loadSlots = async () => {

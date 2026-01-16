@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllUsers, createSlot, getAllBookings, fetchSlots, getAnalytics, deleteSlot, getUserDetails, createAlert, getAllAlertsAdmin, updateAlert, deleteAlert } from '../api';
+import { getAllUsers, createSlot, getAllBookings, fetchSlots, getAnalytics, deleteSlot, getUserDetails, createAlert, getAllAlertsAdmin, deleteAlert } from '../api';
 import AdminAnalytics from '../components/AdminAnalytics';
 import RecentActivity from '../components/RecentActivity';
 import UserDetailModal from '../components/UserDetailModal';
