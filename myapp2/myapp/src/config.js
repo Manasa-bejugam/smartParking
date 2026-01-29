@@ -4,6 +4,6 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 
 export const BACKEND_URL = isDevelopment
     ? 'http://localhost:8080'
-    : 'https://smart-parking-backend-z9ww.onrender.com';
+    : 'https://smart-parking-backend2.onrender.com';
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;
