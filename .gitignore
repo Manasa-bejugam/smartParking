@@ -1,14 +1,37 @@
+# General
 milestone1.md
 run_all.bat
 node_modules/
-.env
+.env*
+.env.local
 dist/
 build/
 *.log
 .vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Java/Maven/Gradle
+target/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+.project
+.classpath
+.factorypath
+.settings/
+.gradle/
+build/
 
 # Security - Admin invite tokens
 backend/invite_token.txt
 
 # Database seeding (contains production credentials)
 backend/seedProductionDB.js
+
