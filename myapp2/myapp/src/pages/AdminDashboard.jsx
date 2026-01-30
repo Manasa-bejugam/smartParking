@@ -4,6 +4,7 @@ import AdminAnalytics from '../components/AdminAnalytics';
 import RecentActivity from '../components/RecentActivity';
 import UserDetailModal from '../components/UserDetailModal';
 import ReportsDashboard from '../components/ReportsDashboard';
+import { useSocket } from '../hooks/useSocket';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ onSwitchToUserView }) => {
@@ -59,11 +60,40 @@ const AdminDashboard = ({ onSwitchToUserView }) => {
     const [analytics, setAnalytics] = useState(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
+    // WebSockets
+    const { isConnected, onSlotUpdate, onAlertCreated, onAlertDeleted } = useSocket();
+
     // Load data based on active tab
     useEffect(() => {
         loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
+
+    // Subscribe to real-time updates
+    useEffect(() => {
+        // Handle slot updates
+        onSlotUpdate((updatedSlot) => {
+            setSlots((prevSlots) =>
+                prevSlots.map((slot) =>
+                    (slot.id || slot._id) === (updatedSlot.id || updatedSlot._id) ? updatedSlot : slot
+                )
+            );
+        });
+
+        // Handle alert created
+        onAlertCreated((newAlert) => {
+            setAlerts((prevAlerts) => {
+                if (prevAlerts.some(a => (a._id || a.id) === (newAlert._id || newAlert.id))) return prevAlerts;
+                return [newAlert, ...prevAlerts];
+            });
+            // Also refresh stats if relevant
+        });
+
+        // Handle alert deleted
+        onAlertDeleted((deletedAlertId) => {
+            setAlerts((prevAlerts) => prevAlerts.filter(a => (a._id || a.id) !== deletedAlertId));
+        });
+    }, [onSlotUpdate, onAlertCreated, onAlertDeleted]);
 
     const loadData = async () => {
         setLoading(true);
@@ -242,7 +272,7 @@ const AdminDashboard = ({ onSwitchToUserView }) => {
                     setError('Please select a slot');
                     return;
                 }
-                alertData.slot = alertSlot;
+                alertData.slotId = alertSlot;
             } else if (alertTargetType === 'area') {
                 if (!alertArea) {
                     setError('Please enter an area');
@@ -673,26 +703,36 @@ const AdminDashboard = ({ onSwitchToUserView }) => {
                                 <tbody>
                                     {slots
                                         .filter(slot => selectedSection === 'All' || (slot.address || 'Smart Parking Complex') === selectedSection)
-                                        .map(slot => (
-                                            <tr key={slot._id}>
-                                                <td>{slot.slotNumber}</td>
-                                                <td>{slot.address || 'Smart Parking Complex'} ({slot.section || 'General'})</td>
-                                                <td>{slot.city || 'Hyderabad'}, {slot.area || 'Madhapur'}</td>
-                                                <td>
-                                                    <span className={`status-badge ${slot.isAvailable ? 'available' : 'booked'}`}>
-                                                        {slot.isAvailable ? 'Available' : 'Booked'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        className="delete-btn"
-                                                        onClick={() => handleDeleteSlot(slot._id)}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        .map(slot => {
+                                            const hasAlert = alerts.some(a =>
+                                                (a.slot && (a.slot._id === slot._id || a.slot.id === slot._id)) ||
+                                                (a.area && a.area === slot.area) ||
+                                                (a.city && a.city === slot.city)
+                                            );
+                                            return (
+                                                <tr key={slot._id}>
+                                                    <td>
+                                                        {slot.slotNumber}
+                                                        {hasAlert && <span style={{ marginLeft: '5px', cursor: 'help' }} title="Active Alert">⚠️</span>}
+                                                    </td>
+                                                    <td>{slot.address || 'Smart Parking Complex'} ({slot.section || 'General'})</td>
+                                                    <td>{slot.city || 'Hyderabad'}, {slot.area || 'Madhapur'}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${slot.isAvailable ? 'available' : 'booked'}`}>
+                                                            {slot.isAvailable ? 'Available' : 'Booked'}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="delete-btn"
+                                                            onClick={() => handleDeleteSlot(slot._id)}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                 </tbody>
                             </table>
                         </div>

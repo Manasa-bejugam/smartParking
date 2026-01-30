@@ -10,9 +10,9 @@ import ParkingMap from "./components/ParkingMap";
 import BottomNav from "./components/BottomNav";
 import MyBookings from "./components/MyBookings";
 import MyPayments from "./components/MyPayments";
-import LocationFilter from "./components/LocationFilter";
+import LocationSearch from './components/LocationSearch'; // Added LocationSearch
 import UserReports from "./components/UserReports";
-import { fetchSlots, getMyBookings } from "./api";
+import { fetchSlots, getMyBookings, getActiveAlerts } from "./api";
 import { useSocket } from "./hooks/useSocket";
 import { API_BASE_URL } from "./config";
 import AvailableSlotsGrid from "./components/AvailableSlotsGrid";
@@ -428,36 +428,133 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [notification, setNotification] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(''); // Location filter by slot ID
+  const [alerts, setAlerts] = useState([]); // Centralized alert state
+  const [userCoords, setUserCoords] = useState(null);
+  const [isNearMe, setIsNearMe] = useState(true); // Default to Near Me, but we will handle fallback
+  const [maxDistance, setMaxDistance] = useState(5000); // 5km default
   const { user, logout } = useAuth();
   const { isConnected, onSlotUpdate, onAlertCreated } = useSocket();
+
+  // Haversine formula to calculate distance in meters
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371e3; // metres
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) *
+      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // in metres
+  };
+
+  const handleLocationUpdate = (coords) => {
+    setUserCoords(coords);
+    // If Near Me is enabled, refresh the slots list
+    if (isNearMe) {
+      applyProximityFilter(allSlots, coords);
+    }
+  };
+
+  const applyProximityFilter = (allData, coords) => {
+    if (!coords || !Array.isArray(allData)) return;
+
+    const slotsWithDistance = allData.map(slot => ({
+      ...slot,
+      distance: calculateDistance(coords.lat, coords.lng, slot.latitude, slot.longitude)
+    }));
+
+    const nearbySlots = slotsWithDistance
+      .filter(slot => slot.distance <= maxDistance)
+      .sort((a, b) => a.distance - b.distance);
+
+    setSlots(nearbySlots);
+  };
+
+  const handleProximityToggle = () => {
+    const newMode = !isNearMe;
+    setIsNearMe(newMode);
+
+    if (newMode) {
+      setSelectedLocation(''); // Clear address filter
+      if (userCoords) {
+        applyProximityFilter(allSlots, userCoords);
+      } else {
+        showNotification("Waiting for your location...");
+      }
+    } else {
+      setSlots([]); // Reset to select location mode
+    }
+  };
 
   // Fetch slots from backend
   useEffect(() => {
     loadSlots();
   }, []);
 
+  // Subscribe to real-time updates and start geolocation
+  useEffect(() => {
+    if (navigator.geolocation) {
+      const success = (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        handleLocationUpdate(coords);
+      };
+
+      const error = (err) => console.log("Geolocation error:", err);
+
+      navigator.geolocation.getCurrentPosition(success, error, { timeout: 10000 });
+      const watchId = navigator.geolocation.watchPosition(success, error, { enableHighAccuracy: true });
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, [allSlots]); // Refresh if slots change to ensure proximity filter is applied
+
   // Subscribe to real-time updates
   useEffect(() => {
     // Listen for slot updates
     onSlotUpdate((updatedSlot) => {
-      setSlots((prevSlots) =>
-        prevSlots.map((slot) =>
-          (slot.id || slot._id) === (updatedSlot.id || updatedSlot._id) ? updatedSlot : slot
-        )
-      );
-      setAllSlots((prevAllSlots) =>
-        prevAllSlots.map((slot) =>
-          (slot.id || slot._id) === (updatedSlot.id || updatedSlot._id) ? updatedSlot : slot
-        )
-      );
+      if (!updatedSlot) return;
+
+      const updateFn = (prevSlots) =>
+        (Array.isArray(prevSlots) ? prevSlots : []).map((slot) => {
+          if ((slot.id || slot._id) === (updatedSlot.id || updatedSlot._id)) {
+            // Preserve distance if it exists in the current state
+            return { ...updatedSlot, distance: slot.distance };
+          }
+          return slot;
+        });
+
+      setSlots(updateFn);
+      setAllSlots(updateFn);
 
       // Show notification
-      showNotification(`Slot ${updatedSlot.slotNumber} ${updatedSlot.isAvailable ? 'is now available' : 'was just booked'}!`);
+      if (updatedSlot.slotNumber) {
+        showNotification(`Slot ${updatedSlot.slotNumber} ${updatedSlot.isAvailable ? 'is now available' : 'was just booked'}!`);
+      }
     });
 
     // Listen for alert notifications
     onAlertCreated((alert) => {
-      showNotification(`⚠️ ${alert.type}: ${alert.message}`);
+      if (!alert) return;
+
+      if (alert.message) {
+        showNotification(`⚠️ ${alert.type || 'Alert'}: ${alert.message}`);
+      }
+
+      // Update centralized alerts state
+      setAlerts(prev => {
+        const currentAlerts = Array.isArray(prev) ? prev : [];
+        // Prevent duplicates
+        if (currentAlerts.some(a => (a._id || a.id) === (alert._id || alert.id))) return currentAlerts;
+        return [alert, ...currentAlerts];
+      });
     });
   }, [onSlotUpdate, onAlertCreated]);
 
@@ -465,10 +562,24 @@ const UserDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      const slotsData = await fetchSlots();
-      setAllSlots(slotsData);
-      // Don't show slots by default - user must select a location first
-      // setSlots will be updated when handleLocationChange is called
+
+      // Fetch slots and active alerts in parallel
+      const [slotsData, alertsData] = await Promise.all([
+        fetchSlots(),
+        getActiveAlerts()
+      ]);
+
+      setAllSlots(Array.isArray(slotsData) ? slotsData : []);
+      setAlerts(Array.isArray(alertsData) ? alertsData : []);
+
+      // If Near Me is active and we already have coordinates, apply initial filter
+      if (isNearMe && userCoords && Array.isArray(slotsData)) {
+        applyProximityFilter(slotsData, userCoords);
+      } else {
+        // If no coords yet, we show all slots but keep flags ready
+        // This ensures the map is populated initially
+        setSlots(Array.isArray(slotsData) ? slotsData : []);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -476,15 +587,35 @@ const UserDashboard = () => {
     }
   };
 
-  // Filter slots by location (address)
-  const handleLocationChange = (address) => {
-    setSelectedLocation(address);
-    if (address === '') {
-      setSlots([]); // Don't show any slots when no location is selected
-    } else {
-      const filtered = allSlots.filter(slot => slot.address === address);
-      setSlots(filtered);
+  // Filter slots by search result
+  const handleSearch = (result) => {
+    if (!result) {
+      // If search is cleared:
+      // 1. If we have user location, go back to "Near Me"
+      // 2. If NOT, show ALL slots basically "Explore" mode
+      if (userCoords) {
+        setIsNearMe(true);
+        applyProximityFilter(allSlots, userCoords);
+      } else {
+        setIsNearMe(false);
+        setSlots(allSlots); // Show ALL
+      }
+      setSelectedLocation('');
+      return;
     }
+
+    setIsNearMe(false);
+    setSelectedLocation(result.label);
+
+    let filtered = [];
+    if (result.type === 'City') {
+      filtered = allSlots.filter(slot => slot.city === result.label);
+    } else if (result.type === 'Area') {
+      filtered = allSlots.filter(slot => slot.area === result.label);
+    } else {
+      filtered = allSlots.filter(slot => slot.address === result.label);
+    }
+    setSlots(filtered);
   };
 
   const showNotification = (message) => {
@@ -550,34 +681,89 @@ const UserDashboard = () => {
           {activeTab === 'map' && (
             <div className="dashboard-split-view">
               <div className="map-section">
-                {/* Location Filter above map */}
-                <div style={{ marginBottom: '15px' }}>
-                  <LocationFilter
+                {/* Location Controls above map */}
+                <div className="location-controls-bar">
+                  <LocationSearch
                     slots={allSlots}
-                    selectedLocation={selectedLocation}
-                    onLocationChange={handleLocationChange}
+                    onSearch={handleSearch}
+                    initialValue={selectedLocation}
                   />
+
+                  <div className="proximity-controls">
+                    <button
+                      className={`proximity-toggle-btn ${isNearMe ? 'active' : ''}`}
+                      onClick={handleProximityToggle}
+                      title="Find parking near your current location"
+                    >
+                      {isNearMe ? '📍 Near Me: ON' : '🔍 Find Near Me'}
+                    </button>
+
+                    {isNearMe && (
+                      <select
+                        className="distance-select"
+                        value={maxDistance}
+                        onChange={(e) => {
+                          const dist = parseInt(e.target.value);
+                          setMaxDistance(dist);
+                          applyProximityFilter(allSlots, userCoords);
+                        }}
+                      >
+                        <option value={1000}>1 km</option>
+                        <option value={2000}>2 km</option>
+                        <option value={5000}>5 km</option>
+                        <option value={10000}>10 km</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
 
-                {/* Show message if no location selected */}
-                {slots.length === 0 ? (
+                {/* Show message if no slots to display and not in near-me mode */}
+                {slots.length === 0 && !isNearMe ? (
                   <div className="no-location-selected">
-                    <div className="empty-state-icon">📍</div>
-                    <h3>Select a Location to View Parking Slots</h3>
-                    <p>Choose a city and address from the dropdown above to see available parking spots on the map.</p>
+                    <div className="empty-state-icon">🌏</div>
+                    <h3>Explore Parking Everywhere</h3>
+                    <p>
+                      We couldn't find matches for your filter, but there are over {allSlots.length} parking spots available across the country.
+                    </p>
+                    <button onClick={() => {
+                      setSlots(allSlots);
+                      setSelectedLocation('');
+                    }} className="explore-btn">
+                      View All Spots
+                    </button>
                   </div>
                 ) : (
                   <>
                     <ParkingMap
                       slots={slots}
+                      alerts={alerts}
+                      userCoords={userCoords}
                       onSelectSlot={handleSelectSlot}
+                      onLocationUpdate={handleLocationUpdate}
                     />
+                    {isNearMe && slots.length === 0 && userCoords && (
+                      <div className="map-overlay-info">
+                        <p>📍 No parking slots found strictly within {maxDistance / 1000}km.</p>
+                        <button onClick={() => {
+                          setIsNearMe(false);
+                          setSlots(allSlots);
+                        }} style={{ pointerEvents: 'auto', marginTop: '10px', padding: '5px 10px', background: 'white', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                          Show All
+                        </button>
+                      </div>
+                    )}
+                    {isNearMe && !userCoords && (
+                      /* We are waiting for location, but let's show all slots in background layer if we have them */
+                      <div className="map-overlay-info pulse">
+                        <p>🛰️ Detecting location... (Showing all spots meanwhile)</p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
               <div className="side-panel">
                 {slots.length > 0 ? (
-                  <AvailableSlotsGrid slots={slots} />
+                  <AvailableSlotsGrid slots={slots} alerts={alerts} />
                 ) : (
                   <div className="empty-slots-grid">
                     <p>🔍 No location selected</p>
@@ -593,10 +779,10 @@ const UserDashboard = () => {
             <div className="tab-content">
               <div className="booking-container-layout">
                 <div className="filter-section">
-                  <LocationFilter
+                  <LocationSearch
                     slots={allSlots}
-                    selectedLocation={selectedLocation}
-                    onLocationChange={handleLocationChange}
+                    onSearch={handleSearch}
+                    initialValue={selectedLocation}
                   />
                 </div>
 
@@ -614,7 +800,7 @@ const UserDashboard = () => {
                     <div className="no-slot-selected">
                       <h3>👈 Select a Parking Spot</h3>
                       <p>Pick a location above and select a slot from the list below:</p>
-                      <SlotList slots={slots} onSelect={handleSelectSlot} />
+                      <SlotList slots={slots} alerts={alerts} onSelect={handleSelectSlot} />
                     </div>
                   )}
                 </div>
@@ -701,6 +887,16 @@ const Dashboard = () => {
 const AuthWrapper = () => {
   const [showLogin, setShowLogin] = useState(true);
   const { isAuthenticated, loading } = useAuth();
+
+  // Warm up backend on mount
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      console.log('Warming up backend...');
+      // Health endpoint is typically at /health or /api/health
+      // Fetching BACKEND_URL directly often wakes up Render
+      fetch(`${API_BASE_URL}/health`, { mode: 'no-cors' }).catch(() => { });
+    }
+  }, [isAuthenticated()]);
 
   if (loading) {
     return (

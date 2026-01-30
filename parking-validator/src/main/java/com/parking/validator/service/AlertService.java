@@ -57,5 +57,6 @@ public class AlertService {
 
     public void deleteAlert(@org.springframework.lang.NonNull String id) {
         alertRepository.deleteById(id);
+        webSocketService.emitAlertDeleted(id);
     }
 }

@@ -2,6 +2,7 @@ package com.parking.validator.service;
 
 import com.parking.validator.model.Slot;
 import com.parking.validator.repository.SlotRepository;
+import com.parking.validator.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,18 @@ public class DataInitializationService implements CommandLineRunner {
         @Autowired
         private SlotRepository slotRepository;
 
+        @Autowired
+        private JwtUtils jwtUtils;
+
         @Override
         public void run(String... args) throws Exception {
+                // Generate and print Master Admin Invite Token
+                String adminToken = jwtUtils.generateAdminInviteToken();
+                System.out.println("\n" + "=".repeat(80));
+                System.out.println("🚀 MASTER ADMIN INVITE TOKEN (Valid for 24h):");
+                System.out.println(adminToken);
+                System.out.println("=".repeat(80) + "\n");
+
                 // Check if slots already exist
                 long count = slotRepository.count();
                 if (count > 0) {

@@ -2,56 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { getSlotAlerts, getAreaAlerts } from '../api';
 import './AvailableSlotsGrid.css';
 
-const AvailableSlotsGrid = ({ slots }) => {
-    const [slotAlerts, setSlotAlerts] = useState({});
+const AvailableSlotsGrid = ({ slots, alerts }) => {
+    // Derived alerts map for slots
+    const slotAlerts = React.useMemo(() => {
+        const alertsMap = {};
+        if (!slots || !alerts) return alertsMap;
 
-    // Fetch alerts for all slots
-    useEffect(() => {
-        const fetchAllAlerts = async () => {
-            if (!slots || slots.length === 0) return;
+        slots.forEach(slot => {
+            const slotId = slot._id || slot.id;
+            const relevantAlerts = alerts.filter(alert => {
+                // Alert targets this specific slot
+                if (alert.slot && (alert.slot._id === slotId || alert.slot.id === slotId)) return true;
+                // Alert targets this area
+                if (alert.area && alert.area === slot.area) return true;
+                // Alert targets this city
+                if (alert.city && alert.city === slot.city) return true;
+                return false;
+            });
 
-            const alertsMap = {};
-
-            for (const slot of slots) {
-                try {
-                    const alertPromises = [];
-
-                    // Fetch slot-specific alerts
-                    if (slot._id || slot.id) {
-                        alertPromises.push(getSlotAlerts(slot._id || slot.id));
-                    }
-
-                    // Fetch area alerts
-                    if (slot.area) {
-                        alertPromises.push(getAreaAlerts(slot.area));
-                    }
-
-                    // Fetch city alerts
-                    if (slot.city) {
-                        alertPromises.push(getAreaAlerts(slot.city));
-                    }
-
-                    const results = await Promise.all(alertPromises);
-                    const allAlerts = results.flat();
-
-                    // Remove duplicates
-                    const uniqueAlerts = Array.from(
-                        new Map(allAlerts.map(alert => [alert._id, alert])).values()
-                    );
-
-                    if (uniqueAlerts.length > 0) {
-                        alertsMap[slot._id || slot.id] = uniqueAlerts;
-                    }
-                } catch (error) {
-                    console.error(`Error fetching alerts for slot ${slot.slotNumber}:`, error);
-                }
+            if (relevantAlerts.length > 0) {
+                // Remove duplicates
+                alertsMap[slotId] = Array.from(
+                    new Map(relevantAlerts.map(a => [a._id || a.id, a])).values()
+                );
             }
-
-            setSlotAlerts(alertsMap);
-        };
-
-        fetchAllAlerts();
-    }, [slots]);
+        });
+        return alertsMap;
+    }, [slots, alerts]);
 
     const getAlertSeverity = (alerts) => {
         if (!alerts || alerts.length === 0) return null;
@@ -84,12 +61,19 @@ const AvailableSlotsGrid = ({ slots }) => {
                     return (
                         <div
                             key={slot._id || slot.id}
-                            className={`slot-dot ${slot.isAvailable ? 'available' : 'booked'} ${severity ? `has-alert-${severity}` : ''}`}
-                            title={`Slot ${slot.slotNumber} - ${slot.isAvailable ? 'Available' : 'Booked'}${alerts ? ` - ${alerts.length} Alert(s)` : ''}`}
+                            className={`slot-dot ${slot.isAvailable ? 'available' : 'booked'} ${severity ? `has-alert-${severity}` : ''} ${slot.distance < 500 ? 'closest' : ''}`}
+                            title={`Slot ${slot.slotNumber} - ${slot.isAvailable ? 'Available' : 'Booked'}${alerts ? ` - ${alerts.length} Alert(s)` : ''}${slot.distance !== Infinity ? ` - ${Math.round(slot.distance)}m away` : ''}`}
                         >
                             {slot.slotNumber}
                             {alerts && alerts.length > 0 && (
                                 <span className="alert-indicator">⚠️</span>
+                            )}
+                            {slot.distance !== Infinity && (
+                                <div className={`distance-badge ${slot.distance < 500 ? 'closest-badge' : ''}`}>
+                                    {slot.distance > 1000
+                                        ? `${(slot.distance / 1000).toFixed(1)}km`
+                                        : `${Math.round(slot.distance)}m`}
+                                </div>
                             )}
                         </div>
                     );

@@ -5,14 +5,14 @@ const LocationFilter = ({ slots, selectedLocation, onLocationChange }) => {
     // Group slots by location (address)
     const locationGroups = {};
 
-    slots.forEach(slot => {
-        const key = slot.address;
+    slots && Array.isArray(slots) && slots.forEach(slot => {
+        const key = slot.address || 'Unknown Location';
         if (!locationGroups[key]) {
             locationGroups[key] = {
-                address: slot.address,
-                city: slot.city,
-                area: slot.area,
-                placeType: slot.placeType,
+                address: slot.address || 'Unknown Location',
+                city: slot.city || 'Hyderabad',
+                area: slot.area || 'General',
+                placeType: slot.placeType || 'Parking',
                 slots: []
             };
         }

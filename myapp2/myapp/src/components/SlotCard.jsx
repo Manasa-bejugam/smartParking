@@ -4,59 +4,29 @@ import AlertBadge from './AlertBadge';
 import AlertModal from './AlertModal';
 import './SlotCard.css';
 
-const SlotCard = ({ slot, onSelect }) => {
-  const [alerts, setAlerts] = useState([]);
+const SlotCard = ({ slot, alerts, onSelect }) => {
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [loadingAlerts, setLoadingAlerts] = useState(false);
+  const loadingAlerts = false; // Prop-based alerts are always "loaded" from perspective of this component
 
   const isAvailable = slot.isAvailable;
   const statusClass = isAvailable ? 'available' : 'booked';
   const statusText = isAvailable ? 'AVAILABLE' : 'BOOKED';
 
-  // Fetch alerts for this slot
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      if (!slot._id && !slot.id) return;
+  // Filter relevant alerts from centralized state
+  const relevantAlerts = React.useMemo(() => {
+    if (!alerts || !slot) return [];
 
-      try {
-        setLoadingAlerts(true);
-
-        // Fetch alerts from multiple sources
-        const alertPromises = [];
-
-        // 1. Slot-specific alerts
-        alertPromises.push(getSlotAlerts(slot._id || slot.id));
-
-        // 2. Area-wide alerts (if slot has area)
-        if (slot.area) {
-          alertPromises.push(getAreaAlerts(slot.area));
-        }
-
-        // 3. City-wide alerts (if slot has city)
-        if (slot.city) {
-          alertPromises.push(getAreaAlerts(slot.city)); // Using getAreaAlerts for city too
-        }
-
-        // Fetch all alerts in parallel
-        const results = await Promise.all(alertPromises);
-
-        // Flatten and combine all alerts, removing duplicates by _id
-        const allAlerts = results.flat();
-        const uniqueAlerts = Array.from(
-          new Map(allAlerts.map(alert => [alert._id, alert])).values()
-        );
-
-        setAlerts(uniqueAlerts);
-      } catch (error) {
-        console.error('Error fetching slot alerts:', error);
-        setAlerts([]);
-      } finally {
-        setLoadingAlerts(false);
-      }
-    };
-
-    fetchAlerts();
-  }, [slot._id, slot.id, slot.area, slot.city]);
+    const slotId = slot._id || slot.id;
+    return alerts.filter(alert => {
+      // Alert targets this specific slot
+      if (alert.slot && (alert.slot._id === slotId || alert.slot.id === slotId)) return true;
+      // Alert targets this area
+      if (alert.area && alert.area === slot.area) return true;
+      // Alert targets this city
+      if (alert.city && alert.city === slot.city) return true;
+      return false;
+    });
+  }, [alerts, slot]);
 
   const handleAlertClick = (e) => {
     e.stopPropagation(); // Prevent slot selection when clicking alert
@@ -65,10 +35,6 @@ const SlotCard = ({ slot, onSelect }) => {
 
   const handleSlotClick = () => {
     // Check if there are warning or critical alerts
-    const hasWarningOrCritical = alerts.some(
-      alert => alert.severity === 'warning' || alert.severity === 'critical'
-    );
-
     if (hasWarningOrCritical) {
       setShowAlertModal(true); // Show alert instead of allowing booking
       return;
@@ -76,6 +42,11 @@ const SlotCard = ({ slot, onSelect }) => {
 
     onSelect(slot);
   };
+
+  // UI Logic
+  const hasWarningOrCritical = relevantAlerts.some(
+    alert => alert.severity === 'warning' || alert.severity === 'critical'
+  );
 
   return (
     <>
@@ -86,16 +57,24 @@ const SlotCard = ({ slot, onSelect }) => {
         <h3>Slot {slot.slotNumber}</h3>
         <p>{statusText}</p>
 
+        {slot.distance !== undefined && slot.distance !== Infinity && (
+          <div className={`distance-badge ${slot.distance < 500 ? 'closest-badge' : ''}`}>
+            📍 {slot.distance > 1000
+              ? `${(slot.distance / 1000).toFixed(1)}km`
+              : `${Math.round(slot.distance)}m`} away
+          </div>
+        )}
+
         {/* Alert Badge */}
-        {!loadingAlerts && alerts.length > 0 && (
-          <AlertBadge alerts={alerts} onClick={handleAlertClick} />
+        {relevantAlerts.length > 0 && (
+          <AlertBadge alerts={relevantAlerts} onClick={handleAlertClick} />
         )}
       </div>
 
       {/* Alert Modal */}
       {showAlertModal && (
         <AlertModal
-          alerts={alerts}
+          alerts={relevantAlerts}
           slotNumber={slot.slotNumber}
           onClose={() => setShowAlertModal(false)}
         />

@@ -20,6 +20,15 @@ const Login = ({ onSwitchToRegister }) => {
         setLoading(true);
         setLoadingMessage('Connecting to server...');
 
+        // Dynamic loading message for cold starts
+        const messageTimer = setTimeout(() => {
+            setLoadingMessage('Server is waking up (Cold start)... Please wait.');
+        }, 5000);
+
+        const longWaitTimer = setTimeout(() => {
+            setLoadingMessage('Almost there! Backend usually takes 20-30s to start...');
+        }, 15000);
+
         try {
             const response = await fetchWithRetry(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
@@ -27,7 +36,7 @@ const Login = ({ onSwitchToRegister }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ identifier, password, adminSecret }),
-            }, 3, 5000); // 3 retries, 5 second delay
+            }, 4, 3000); // 4 retries, 3 second base delay (more aggressive for cold start)
 
             const data = await response.json();
 
@@ -46,6 +55,8 @@ const Login = ({ onSwitchToRegister }) => {
         } catch (err) {
             setError(err.message);
         } finally {
+            clearTimeout(messageTimer);
+            clearTimeout(longWaitTimer);
             setLoading(false);
         }
     };

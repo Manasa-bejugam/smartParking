@@ -1,7 +1,10 @@
 package com.parking.validator.controller;
 
+import com.parking.validator.dto.AlertRequest;
 import com.parking.validator.model.Alert;
+import com.parking.validator.model.Slot;
 import com.parking.validator.service.AlertService;
+import com.parking.validator.service.SlotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,17 +23,32 @@ public class AlertController {
     @Autowired
     private AlertService alertService;
 
+    @Autowired
+    private SlotService slotService;
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createAlert(@RequestBody Alert alert) {
-        if (alert.getSlot() == null && alert.getArea() == null && alert.getCity() == null) {
-            return ResponseEntity.status(400).body("Alert must target a slot, area, or city");
+    public ResponseEntity<?> createAlert(@RequestBody AlertRequest request) {
+        if (request.getSlotId() == null && request.getArea() == null && request.getCity() == null) {
+            return ResponseEntity.status(400).body(Map.of("message", "Alert must target a slot, area, or city"));
         }
 
-        // Set creator if needed (optional depending on frontend)
-        // UserDetailsImpl userDetails = (UserDetailsImpl)
-        // SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // alert.setCreatedBy(...);
+        Alert alert = Alert.builder()
+                .message(request.getMessage())
+                .type(request.getType())
+                .severity(request.getSeverity())
+                .area(request.getArea())
+                .city(request.getCity())
+                .expiresAt(request.getExpiresAt())
+                .build();
+
+        if (request.getSlotId() != null) {
+            Optional<Slot> slotOptional = slotService.getSlotById(request.getSlotId());
+            if (slotOptional.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("message", "Slot not found"));
+            }
+            alert.setSlot(slotOptional.get());
+        }
 
         Alert createdAlert = alertService.createAlert(alert);
         return ResponseEntity.status(201).body(createdAlert);

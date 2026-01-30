@@ -45,21 +45,27 @@
 
 .visual-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 12px;
     margin-bottom: 20px;
 }
 
 .slot-dot {
-    aspect-ratio: 1;
+    aspect-ratio: auto;
+    min-height: 50px;
+    padding: 8px 4px;
     display: flex;
+    flex-direction: column;
+    /* Allow content to stack if needed */
     align-items: center;
     justify-content: center;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
     color: white;
     transition: transform 0.2s ease;
+    word-break: break-word;
 }
 
 .slot-dot:hover {

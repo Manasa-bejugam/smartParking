@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './config';
+import { fetchWithRetry } from './utils/apiRetry';
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
@@ -12,9 +13,9 @@ const getAuthHeaders = () => {
 // Fetch all slots
 export const fetchSlots = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/slots/all`, {
+        const response = await fetchWithRetry(`${API_BASE_URL}/slots/all`, {
             headers: getAuthHeaders()
-        });
+        }, 3, 2000);
 
         if (!response.ok) {
             throw new Error('Failed to fetch slots');
@@ -398,19 +399,20 @@ export const deleteAlert = async (alertId) => {
 // Public: Get all active alerts
 export const getActiveAlerts = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/alerts`, {
+        const response = await fetchWithRetry(`${API_BASE_URL}/alerts`, {
             headers: getAuthHeaders()
-        });
+        }, 3, 2000);
 
         if (!response.ok) {
-            throw new Error('Failed to fetch active alerts');
+            console.warn('Failed to fetch active alerts, using empty list');
+            return [];
         }
 
         const data = await response.json();
-        return data;
+        return Array.isArray(data) ? data : [];
     } catch (error) {
         console.error('Error fetching active alerts:', error);
-        throw error;
+        return []; // Return empty array to prevent UI crashes
     }
 };
 

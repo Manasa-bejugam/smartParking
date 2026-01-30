@@ -64,7 +64,7 @@ function getDemoCoordinates(index, centerLat, centerLng) {
     };
 }
 
-const ParkingMap = ({ slots, onSelectSlot }) => {
+const ParkingMap = ({ slots, alerts, userCoords, onSelectSlot, onLocationUpdate }) => {
     // Default Center: Hyderabad Hitech City
     const DEFAULT_CENTER = CITY_CENTERS['Hitech City'];
     const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
@@ -73,40 +73,50 @@ const ParkingMap = ({ slots, onSelectSlot }) => {
     const [demoAnchor, setDemoAnchor] = useState(DEFAULT_CENTER);
 
     // Alert state
-    const [slotAlerts, setSlotAlerts] = useState({});
     const [selectedSlotAlerts, setSelectedSlotAlerts] = useState(null);
     const [selectedSlotNumber, setSelectedSlotNumber] = useState('');
 
-    // Watch user location for the "You" marker
+    // Derived alerts map for slots
+    const slotAlerts = React.useMemo(() => {
+        const alertsMap = {};
+        if (!slots || !alerts) return alertsMap;
+
+        slots.forEach(slot => {
+            const slotId = slot._id || slot.id;
+            const relevantAlerts = alerts.filter(alert => {
+                // Alert targets this specific slot
+                if (alert.slot && (alert.slot._id === slotId || alert.slot.id === slotId)) return true;
+                // Alert targets this area
+                if (alert.area && alert.area === slot.area) return true;
+                // Alert targets this city
+                if (alert.city && alert.city === slot.city) return true;
+                return false;
+            });
+
+            if (relevantAlerts.length > 0) {
+                // Remove duplicates
+                alertsMap[slotId] = Array.from(
+                    new Map(relevantAlerts.map(a => [a._id || a.id, a])).values()
+                );
+            }
+        });
+        return alertsMap;
+    }, [slots, alerts]);
+
+    // Watch user location for the "You" marker (now managed by App.jsx)
     useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setUserLocation({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                    setHasLocation(true);
-                },
-                (error) => console.log("GPS Initial error:", error),
-                { timeout: 5000 }
-            );
-
-            const watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    setUserLocation({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                    setHasLocation(true);
-                },
-                (error) => console.log("Watch error:", error),
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
-
-            return () => navigator.geolocation.clearWatch(watchId);
+        if (userCoords) {
+            setUserLocation(userCoords);
+            setHasLocation(true);
         }
-    }, []);
+    }, [userCoords]);
+
+    // Initial centering on user location
+    useEffect(() => {
+        if (hasLocation && slots.length === 0) {
+            setMapCenter(userLocation);
+        }
+    }, [hasLocation, userLocation, slots.length]);
 
     // Effect to handle view projection when slots change (filtering)
     useEffect(() => {
@@ -135,53 +145,6 @@ const ParkingMap = ({ slots, onSelectSlot }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slots]); // Run whenever the slots list updates (filter changed)
 
-    // Fetch alerts for all slots
-    useEffect(() => {
-        const fetchAllAlerts = async () => {
-            if (!slots || slots.length === 0) return;
-
-            const alertsMap = {};
-
-            for (const slot of slots) {
-                try {
-                    const alertPromises = [];
-
-                    // Fetch slot-specific alerts
-                    if (slot._id || slot.id) {
-                        alertPromises.push(getSlotAlerts(slot._id || slot.id));
-                    }
-
-                    // Fetch area alerts
-                    if (slot.area) {
-                        alertPromises.push(getAreaAlerts(slot.area));
-                    }
-
-                    // Fetch city alerts
-                    if (slot.city) {
-                        alertPromises.push(getAreaAlerts(slot.city));
-                    }
-
-                    const results = await Promise.all(alertPromises);
-                    const allAlerts = results.flat();
-
-                    // Remove duplicates
-                    const uniqueAlerts = Array.from(
-                        new Map(allAlerts.map(alert => [alert._id, alert])).values()
-                    );
-
-                    if (uniqueAlerts.length > 0) {
-                        alertsMap[slot._id || slot.id] = uniqueAlerts;
-                    }
-                } catch (error) {
-                    console.error(`Error fetching alerts for slot ${slot.slotNumber}:`, error);
-                }
-            }
-
-            setSlotAlerts(alertsMap);
-        };
-
-        fetchAllAlerts();
-    }, [slots]);
 
     const handleLocateMe = () => {
         if (!navigator.geolocation) {
@@ -197,6 +160,7 @@ const ParkingMap = ({ slots, onSelectSlot }) => {
                 setUserLocation(pos);
                 setMapCenter(pos);
                 setHasLocation(true);
+                if (onLocationUpdate) onLocationUpdate(pos);
             },
             () => alert("Unable to retrieve your location")
         );

@@ -2,9 +2,9 @@ import React from "react";
 import SlotCard from "../components/SlotCard";
 import "./SlotList.css";
 
-const SlotList = ({ slots, onSelect }) => {
+const SlotList = ({ slots, alerts, onSelect }) => {
   // Show empty state if no slots
-  if (!slots || slots.length === 0) {
+  if (!slots || !Array.isArray(slots) || slots.length === 0) {
     return (
       <div className="slot-list-container">
         <div className="empty-slot-state">
@@ -26,6 +26,7 @@ const SlotList = ({ slots, onSelect }) => {
           <SlotCard
             key={slot.id || slot._id}
             slot={slot}
+            alerts={alerts}
             onSelect={onSelect}
           />
         ))}

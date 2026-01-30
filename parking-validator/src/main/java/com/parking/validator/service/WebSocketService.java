@@ -22,4 +22,8 @@ public class WebSocketService {
     public void emitBookingCreated(@org.springframework.lang.NonNull Object booking) {
         messagingTemplate.convertAndSend("/topic/bookings", booking);
     }
+
+    public void emitAlertDeleted(@org.springframework.lang.NonNull String id) {
+        messagingTemplate.convertAndSend("/topic/alerts/delete", id);
+    }
 }

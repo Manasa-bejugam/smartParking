@@ -53,10 +53,14 @@ export const useSocket = () => {
         if (stompClientRef.current && stompClientRef.current.connected) {
             if (!subscriptionsRef.current.slotUpdate) {
                 subscriptionsRef.current.slotUpdate = stompClientRef.current.subscribe('/topic/slots', (message) => {
-                    const data = JSON.parse(message.body);
-                    console.log('🔄 Slot updated:', data.slotNumber);
-                    setLastUpdate(data);
-                    callback(data);
+                    try {
+                        const data = JSON.parse(message.body);
+                        console.log('🔄 Slot updated:', data.slotNumber);
+                        setLastUpdate(data);
+                        callback(data);
+                    } catch (e) {
+                        console.error('Error parsing slot update:', e);
+                    }
                 });
             }
         } else if (stompClientRef.current) {
@@ -70,13 +74,32 @@ export const useSocket = () => {
         if (stompClientRef.current && stompClientRef.current.connected) {
             if (!subscriptionsRef.current.alerts) {
                 subscriptionsRef.current.alerts = stompClientRef.current.subscribe('/topic/alerts', (message) => {
-                    const data = JSON.parse(message.body);
-                    console.log('⚠️ Alert received:', data.type);
-                    callback(data);
+                    try {
+                        const data = JSON.parse(message.body);
+                        console.log('⚠️ Alert received:', data.type);
+                        callback(data);
+                    } catch (e) {
+                        console.error('Error parsing alert:', e);
+                    }
                 });
             }
         } else if (stompClientRef.current) {
             setTimeout(() => onAlertCreated(callback), 1000);
+        }
+    };
+
+    // Subscribe to alert deletions
+    const onAlertDeleted = (callback) => {
+        if (stompClientRef.current && stompClientRef.current.connected) {
+            if (!subscriptionsRef.current.alertsDelete) {
+                subscriptionsRef.current.alertsDelete = stompClientRef.current.subscribe('/topic/alerts/delete', (message) => {
+                    const alertId = message.body; // Raw ID string
+                    console.log('🗑️ Alert deleted:', alertId);
+                    callback(alertId);
+                });
+            }
+        } else if (stompClientRef.current) {
+            setTimeout(() => onAlertDeleted(callback), 1000);
         }
     };
 
@@ -85,6 +108,7 @@ export const useSocket = () => {
         lastUpdate,
         onSlotUpdate,
         onAlertCreated,
+        onAlertDeleted,
         socket: stompClientRef.current,
     };
 };
