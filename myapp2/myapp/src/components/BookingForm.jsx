@@ -78,8 +78,8 @@ const BookingForm = ({ slots, selectedSlot: propSelectedSlot, onBookingSuccess }
       const bookingData = {
         slotId: selectedSlotId,
         vehicleNumber: vehicleNumber.trim().toUpperCase(),
-        startTime: new Date(startTime).toISOString().slice(0, 19),
-        endTime: new Date(endTime).toISOString().slice(0, 19)
+        startTime: startTime,
+        endTime: endTime
       };
 
       const response = await createBooking(bookingData);
